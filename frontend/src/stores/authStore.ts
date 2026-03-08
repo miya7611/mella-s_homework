@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import type { User, LoginData, RegisterData, UserRole } from '../types/user';
 import { authApi } from '../api/auth.api';
 import { storage } from '../lib/storage';
+import { extractErrorMessage } from '../lib/utils';
 
 interface AuthState {
   user: User | null;
@@ -39,8 +40,8 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: true,
             isLoading: false,
           });
-        } catch (error: any) {
-          const message = error.response?.data?.error?.message || '登录失败';
+        } catch (error) {
+          const message = extractErrorMessage(error, '登录失败');
           set({ error: message, isLoading: false });
           throw error;
         }
@@ -58,8 +59,8 @@ export const useAuthStore = create<AuthState>()(
             isAuthenticated: true,
             isLoading: false,
           });
-        } catch (error: any) {
-          const message = error.response?.data?.error?.message || '注册失败';
+        } catch (error) {
+          const message = extractErrorMessage(error, '注册失败');
           set({ error: message, isLoading: false });
           throw error;
         }

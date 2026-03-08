@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { Task, CreateTaskData, UpdateTaskData, TaskFilters } from '../types/task';
 import { taskApi } from '../api/task.api';
+import { extractErrorMessage } from '../lib/utils';
 
 interface TaskState {
   tasks: Task[];
@@ -29,8 +30,8 @@ export const useTaskStore = create<TaskState>((set) => ({
     try {
       const tasks = await taskApi.getTasks(filters);
       set({ tasks, isLoading: false });
-    } catch (error: any) {
-      const message = error.response?.data?.error?.message || '获取任务列表失败';
+    } catch (error) {
+      const message = extractErrorMessage(error, '获取任务列表失败');
       set({ error: message, isLoading: false });
     }
   },
@@ -40,8 +41,8 @@ export const useTaskStore = create<TaskState>((set) => ({
     try {
       const task = await taskApi.getTaskById(id);
       set({ currentTask: task, isLoading: false });
-    } catch (error: any) {
-      const message = error.response?.data?.error?.message || '获取任务详情失败';
+    } catch (error) {
+      const message = extractErrorMessage(error, '获取任务详情失败');
       set({ error: message, isLoading: false });
     }
   },
@@ -55,8 +56,8 @@ export const useTaskStore = create<TaskState>((set) => ({
         isLoading: false,
       }));
       return task;
-    } catch (error: any) {
-      const message = error.response?.data?.error?.message || '创建任务失败';
+    } catch (error) {
+      const message = extractErrorMessage(error, '创建任务失败');
       set({ error: message, isLoading: false });
       throw error;
     }
@@ -71,8 +72,8 @@ export const useTaskStore = create<TaskState>((set) => ({
         currentTask: state.currentTask?.id === id ? updatedTask : state.currentTask,
         isLoading: false,
       }));
-    } catch (error: any) {
-      const message = error.response?.data?.error?.message || '更新任务失败';
+    } catch (error) {
+      const message = extractErrorMessage(error, '更新任务失败');
       set({ error: message, isLoading: false });
       throw error;
     }
@@ -87,8 +88,8 @@ export const useTaskStore = create<TaskState>((set) => ({
         currentTask: state.currentTask?.id === id ? updatedTask : state.currentTask,
         isLoading: false,
       }));
-    } catch (error: any) {
-      const message = error.response?.data?.error?.message || '更新任务状态失败';
+    } catch (error) {
+      const message = extractErrorMessage(error, '更新任务状态失败');
       set({ error: message, isLoading: false });
       throw error;
     }
@@ -103,8 +104,8 @@ export const useTaskStore = create<TaskState>((set) => ({
         currentTask: state.currentTask?.id === id ? null : state.currentTask,
         isLoading: false,
       }));
-    } catch (error: any) {
-      const message = error.response?.data?.error?.message || '删除任务失败';
+    } catch (error) {
+      const message = extractErrorMessage(error, '删除任务失败');
       set({ error: message, isLoading: false });
       throw error;
     }

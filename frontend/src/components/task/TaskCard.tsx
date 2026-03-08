@@ -29,7 +29,7 @@ export function TaskCard({ task, onStatusChange, onClick }: TaskCardProps) {
 
   return (
     <Card
-      className={cn('cursor-pointer transition-shadow hover:shadow-md', onClick && 'cursor-pointer')}
+      className={cn('transition-shadow hover:shadow-md', onClick && 'cursor-pointer')}
       onClick={onClick}
     >
       <CardContent className="p-4">
@@ -80,10 +80,9 @@ export function TaskCard({ task, onStatusChange, onClick }: TaskCardProps) {
               onClick={(e) => e.stopPropagation()}
               className="w-full rounded-md border border-input bg-background px-3 py-1.5 text-sm"
             >
-              <option value="pending">待处理</option>
-              <option value="planned">已计划</option>
-              <option value="in_progress">进行中</option>
-              <option value="completed">已完成</option>
+              {Object.entries(TASK_STATUS).map(([value, { label }]) => (
+                <option key={value} value={value}>{label}</option>
+              ))}
             </select>
           </div>
         )}

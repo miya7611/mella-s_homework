@@ -1,10 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Trophy, Clock, CheckCircle, AlertCircle } from 'lucide-react';
 import { useAuthStore, useTaskStore } from '../stores';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { TaskList } from '../components/task';
+import { TASK_STATUS } from '../lib/constants';
 
 export function DashboardPage() {
   const navigate = useNavigate();
@@ -17,13 +18,23 @@ export function DashboardPage() {
     }
   }, [user, fetchTasks]);
 
-  const todayTasks = tasks.filter(
-    (t) => t.scheduled_date === new Date().toISOString().split('T')[0]
-  );
+  const today = useMemo(() => new Date().toISOString().split('T')[0], []);
 
-  const completedCount = tasks.filter((t) => t.status === 'completed').length;
-  const inProgressCount = tasks.filter((t) => t.status === 'in_progress').length;
-  const pendingCount = tasks.filter((t) => t.status === 'pending').length;
+  const { todayTasks, completedCount, inProgressCount, pendingCount } = useMemo(() => {
+    const todayTasks = tasks.filter((t) => t.scheduled_date === today);
+    let completedCount = 0;
+    let inProgressCount = 0;
+    let pendingCount = 0;
+
+    for (const task of tasks) {
+      if (task.status === 'completed') completedCount++;
+      else if (task.status === 'in_progress') inProgressCount++;
+      else if (task.status === 'pending') pendingCount++;
+    }
+
+    return { todayTasks, completedCount, inProgressCount, pendingCount };
+  }, [tasks, today]);
+
   const totalPoints = user?.total_points || 0;
 
   const isParent = user?.role === 'parent';
@@ -50,21 +61,21 @@ export function DashboardPage() {
           <CardContent className="p-4 text-center">
             <AlertCircle className="mx-auto h-5 w-5 text-gray-500 mb-1" />
             <p className="text-2xl font-bold">{pendingCount}</p>
-            <p className="text-xs text-muted-foreground">待处理</p>
+            <p className="text-xs text-muted-foreground">{TASK_STATUS.pending.label}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
             <Clock className="mx-auto h-5 w-5 text-yellow-500 mb-1" />
             <p className="text-2xl font-bold">{inProgressCount}</p>
-            <p className="text-xs text-muted-foreground">进行中</p>
+            <p className="text-xs text-muted-foreground">{TASK_STATUS.in_progress.label}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
             <CheckCircle className="mx-auto h-5 w-5 text-green-500 mb-1" />
             <p className="text-2xl font-bold">{completedCount}</p>
-            <p className="text-xs text-muted-foreground">已完成</p>
+            <p className="text-xs text-muted-foreground">{TASK_STATUS.completed.label}</p>
           </CardContent>
         </Card>
       </div>
