@@ -1,25 +1,18 @@
 import { NavLink } from 'react-router-dom';
-import { Home, ListTodo, Users } from 'lucide-react';
-import { useAuthStore } from '../../stores';
+import { Home, ListTodo, Gift } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 const navItems = [
   { to: '/', icon: Home, label: '首页' },
   { to: '/tasks', icon: ListTodo, label: '任务' },
+  { to: '/rewards', icon: Gift, label: '奖励' },
 ];
 
-const parentOnlyItems = [{ to: '/children', icon: Users, label: '孩子' }];
-
 export function BottomNav() {
-  const { user } = useAuthStore();
-  const isParent = user?.role === 'parent';
-
-  const allItems = isParent ? [...navItems, ...parentOnlyItems] : navItems;
-
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background">
       <div className="flex h-16 items-center justify-around">
-        {allItems.map((item) => (
+        {navItems.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}

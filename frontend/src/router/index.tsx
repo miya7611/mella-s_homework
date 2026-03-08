@@ -7,6 +7,9 @@ import { TasksPage } from '../pages/TasksPage';
 import { TaskCreatePage } from '../pages/TaskCreatePage';
 import { ChildrenPage } from '../pages/ChildrenPage';
 import { TaskDetailPage } from '../pages/TaskDetailPage';
+import { RewardsPage } from '../pages/RewardsPage';
+import { RewardCreatePage } from '../pages/RewardCreatePage';
+import { ExchangeHistoryPage } from '../pages/ExchangeHistoryPage';
 import { AppLayout } from '../components/layout/AppLayout';
 
 export const router = createBrowserRouter([
@@ -53,6 +56,22 @@ export const router = createBrowserRouter([
             <ChildrenPage />
           </ProtectedRoute>
         ),
+      },
+      {
+        path: 'rewards',
+        element: <RewardsPage />,
+      },
+      {
+        path: 'rewards/create',
+        element: (
+          <ProtectedRoute requireParent>
+            <RewardCreatePage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'rewards/history',
+        element: <ExchangeHistoryPage />,
       },
     ],
   },

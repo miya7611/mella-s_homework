@@ -5,6 +5,7 @@ import { initDatabase, getDatabase, saveDatabase } from './database/connection';
 import { createTables } from './database/schema';
 import authRoutes from './routes/auth';
 import tasksRoutes from './routes/tasks';
+import rewardsRoutes from './routes/rewards';
 import { authenticate, requireParent, AuthRequest } from './middleware/auth';
 
 dotenv.config();
@@ -24,6 +25,7 @@ app.get('/health', async (req, res) => {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/tasks', tasksRoutes);
+app.use('/api/rewards', rewardsRoutes);
 
 // Protected test routes
 app.get('/api/me', authenticate, (req: AuthRequest, res) => {

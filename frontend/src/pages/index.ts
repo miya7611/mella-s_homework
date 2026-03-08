@@ -5,3 +5,6 @@ export { TasksPage } from './TasksPage';
 export { TaskCreatePage } from './TaskCreatePage';
 export { ChildrenPage } from './ChildrenPage';
 export { TaskDetailPage } from './TaskDetailPage';
+export { RewardsPage } from './RewardsPage';
+export { RewardCreatePage } from './RewardCreatePage';
+export { ExchangeHistoryPage } from './ExchangeHistoryPage';
