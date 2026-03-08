@@ -27,4 +27,16 @@ export const authApi = {
     const response = await client.get<ApiResponse<Partial<User>[]>>('/api/auth/children');
     return response.data.data;
   },
+
+  updateProfile: async (data: { avatar?: string }): Promise<Partial<User>> => {
+    const response = await client.put<ApiResponse<Partial<User>>>('/api/auth/profile', data);
+    return response.data.data;
+  },
+
+  changePassword: async (data: {
+    currentPassword: string;
+    newPassword: string;
+  }): Promise<void> => {
+    await client.put('/api/auth/password', data);
+  },
 };

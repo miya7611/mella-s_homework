@@ -159,4 +159,77 @@ router.get('/children', authenticate, requireParent, async (req: AuthRequest, re
   }
 });
 
+// Update profile
+router.put('/profile', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const { avatar } = req.body;
+    const authService = getAuthService();
+    const user = await authService.updateProfile(req.user!.userId, { avatar });
+    saveDatabase();
+
+    res.json({
+      success: true,
+      data: user
+    });
+  } catch (error: any) {
+    let code = 'UPDATE_FAILED';
+    let message = 'Failed to update profile';
+    let status = 400;
+
+    if (error.message === 'USER_NOT_FOUND') {
+      code = 'USER_NOT_FOUND';
+      message = 'User not found';
+      status = 404;
+    }
+
+    res.status(status).json({
+      success: false,
+      error: { code, message }
+    });
+  }
+});
+
+// Change password
+router.put('/password', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'MISSING_FIELDS',
+          message: 'Current password and new password are required'
+        }
+      });
+    }
+
+    const authService = getAuthService();
+    await authService.changePassword(req.user!.userId, { currentPassword, newPassword });
+    saveDatabase();
+
+    res.json({
+      success: true,
+      message: 'Password changed successfully'
+    });
+  } catch (error: any) {
+    let code = 'CHANGE_PASSWORD_FAILED';
+    let message = 'Failed to change password';
+    let status = 400;
+
+    if (error.message === 'INVALID_CURRENT_PASSWORD') {
+      code = 'INVALID_CURRENT_PASSWORD';
+      message = 'Current password is incorrect';
+    } else if (error.message === 'INVALID_PASSWORD') {
+      code = 'INVALID_PASSWORD';
+      message = 'Password does not meet requirements (parent: min 6 chars, child: min 4 chars)';
+    }
+
+    res.status(status).json({
+      success: false,
+      error: { code, message }
+    });
+  }
+});
+
 export default router;

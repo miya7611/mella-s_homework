@@ -110,6 +110,51 @@ export class AuthService {
     return result[0].values.map((row) => this.sanitizeUser(this.rowToUser(row)));
   }
 
+  async updateProfile(userId: number, data: { avatar?: string }): Promise<Partial<User>> {
+    if (data.avatar !== undefined) {
+      this.db.run('UPDATE users SET avatar = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [
+        data.avatar,
+        userId,
+      ]);
+    }
+
+    const result = this.db.exec('SELECT * FROM users WHERE id = ?', [userId]);
+    if (result.length === 0 || result[0].values.length === 0) {
+      throw new Error('USER_NOT_FOUND');
+    }
+
+    return this.sanitizeUser(this.rowToUser(result[0].values[0]));
+  }
+
+  async changePassword(
+    userId: number,
+    data: { currentPassword: string; newPassword: string }
+  ): Promise<void> {
+    // Get user
+    const result = this.db.exec('SELECT * FROM users WHERE id = ?', [userId]);
+    if (result.length === 0 || result[0].values.length === 0) {
+      throw new Error('USER_NOT_FOUND');
+    }
+
+    const user = this.rowToUser(result[0].values[0]);
+
+    // Verify current password
+    const isValid = await bcrypt.compare(data.currentPassword, user.password);
+    if (!isValid) {
+      throw new Error('INVALID_CURRENT_PASSWORD');
+    }
+
+    // Validate new password
+    this.validatePassword(data.newPassword, user.role);
+
+    // Hash and update password
+    const hashedPassword = await bcrypt.hash(data.newPassword, 10);
+    this.db.run('UPDATE users SET password = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [
+      hashedPassword,
+      userId,
+    ]);
+  }
+
   private validatePassword(password: string, role: string): void {
     if (role === 'parent') {
       // Parent passwords must be at least 6 characters

@@ -17,6 +17,8 @@ interface AuthState {
   logout: () => void;
   clearError: () => void;
   setUser: (user: User) => void;
+  updateProfile: (data: { avatar?: string }) => Promise<void>;
+  changePassword: (data: { currentPassword: string; newPassword: string }) => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -83,6 +85,34 @@ export const useAuthStore = create<AuthState>()(
       setUser: (user: User) => {
         storage.setUser(user);
         set({ user });
+      },
+
+      updateProfile: async (data: { avatar?: string }) => {
+        set({ isLoading: true, error: null });
+        try {
+          const updatedUser = await authApi.updateProfile(data);
+          set((state) => {
+            const fullUser = { ...state.user, ...updatedUser } as User;
+            storage.setUser(fullUser);
+            return { user: fullUser, isLoading: false };
+          });
+        } catch (error) {
+          const message = extractErrorMessage(error, '更新资料失败');
+          set({ error: message, isLoading: false });
+          throw error;
+        }
+      },
+
+      changePassword: async (data: { currentPassword: string; newPassword: string }) => {
+        set({ isLoading: true, error: null });
+        try {
+          await authApi.changePassword(data);
+          set({ isLoading: false });
+        } catch (error) {
+          const message = extractErrorMessage(error, '修改密码失败');
+          set({ error: message, isLoading: false });
+          throw error;
+        }
       },
     }),
     {

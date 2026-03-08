@@ -1,4 +1,4 @@
-import { LogOut, User } from 'lucide-react';
+import { LogOut, User, Settings } from 'lucide-react';
 import { useAuthStore } from '../../stores';
 import { useNavigate } from 'react-router-dom';
 
@@ -28,6 +28,14 @@ export function Header() {
               </p>
             </div>
           </div>
+
+          <button
+            onClick={() => navigate('/settings')}
+            className="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-foreground"
+            title="设置"
+          >
+            <Settings className="h-5 w-5" />
+          </button>
 
           <button
             onClick={handleLogout}

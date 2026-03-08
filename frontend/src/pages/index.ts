@@ -8,3 +8,4 @@ export { TaskDetailPage } from './TaskDetailPage';
 export { RewardsPage } from './RewardsPage';
 export { RewardCreatePage } from './RewardCreatePage';
 export { ExchangeHistoryPage } from './ExchangeHistoryPage';
+export { SettingsPage } from './SettingsPage';
