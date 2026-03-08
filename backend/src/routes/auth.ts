@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { AuthService } from '../services/authService';
 import { getDatabase, saveDatabase } from '../database/connection';
+import { authenticate, requireParent, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
@@ -93,6 +94,67 @@ router.post('/login', async (req, res) => {
     res.status(status).json({
       success: false,
       error: { code, message }
+    });
+  }
+});
+
+// Create child account (parent only)
+router.post('/children', authenticate, requireParent, async (req: AuthRequest, res) => {
+  try {
+    const { username, password, avatar } = req.body;
+
+    if (!username || !password) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'MISSING_FIELDS',
+          message: 'Username and password are required'
+        }
+      });
+    }
+
+    const authService = getAuthService();
+    const child = await authService.createChild(req.user!.userId, { username, password, avatar });
+    saveDatabase();
+
+    res.status(201).json({
+      success: true,
+      data: child
+    });
+  } catch (error: any) {
+    let code = 'CREATE_CHILD_FAILED';
+    let message = 'Failed to create child account';
+    let status = 400;
+
+    if (error.message === 'USERNAME_EXISTS') {
+      code = 'USERNAME_EXISTS';
+      message = 'Username already exists';
+    } else if (error.message === 'INVALID_PASSWORD') {
+      code = 'INVALID_PASSWORD';
+      message = 'Password must be at least 4 characters';
+    }
+
+    res.status(status).json({
+      success: false,
+      error: { code, message }
+    });
+  }
+});
+
+// Get children list (parent only)
+router.get('/children', authenticate, requireParent, async (req: AuthRequest, res) => {
+  try {
+    const authService = getAuthService();
+    const children = authService.getChildrenByParentId(req.user!.userId);
+
+    res.json({
+      success: true,
+      data: children
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: { code: 'FETCH_FAILED', message: error.message }
     });
   }
 });

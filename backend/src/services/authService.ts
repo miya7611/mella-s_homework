@@ -21,8 +21,8 @@ export class AuthService {
 
     // Insert user
     this.db.run(
-      'INSERT INTO users (username, password, role, avatar) VALUES (?, ?, ?, ?)',
-      [data.username, hashedPassword, data.role, data.avatar || null]
+      'INSERT INTO users (username, password, role, parent_id, avatar) VALUES (?, ?, ?, ?, ?)',
+      [data.username, hashedPassword, data.role, data.parent_id || null, data.avatar || null]
     );
 
     // Get created user
@@ -71,6 +71,45 @@ export class AuthService {
     return this.rowToUser(result[0].values[0]);
   }
 
+  async createChild(parentId: number, data: { username: string; password: string; avatar?: string }): Promise<Partial<User>> {
+    // Validate password (child passwords need at least 4 chars)
+    this.validatePassword(data.password, 'child');
+
+    // Check if username exists
+    const existingUser = this.db.exec('SELECT id FROM users WHERE username = ?', [data.username]);
+    if (existingUser.length > 0 && existingUser[0].values.length > 0) {
+      throw new Error('USERNAME_EXISTS');
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(data.password, 10);
+
+    // Insert child user with parent_id
+    this.db.run(
+      'INSERT INTO users (username, password, role, parent_id, avatar) VALUES (?, ?, ?, ?, ?)',
+      [data.username, hashedPassword, 'child', parentId, data.avatar || null]
+    );
+
+    // Get created user
+    const result = this.db.exec('SELECT * FROM users WHERE id = last_insert_rowid()');
+    const user = this.rowToUser(result[0].values[0]);
+
+    return this.sanitizeUser(user);
+  }
+
+  getChildrenByParentId(parentId: number): Partial<User>[] {
+    const result = this.db.exec(
+      'SELECT * FROM users WHERE parent_id = ? ORDER BY created_at ASC',
+      [parentId]
+    );
+
+    if (result.length === 0 || result[0].values.length === 0) {
+      return [];
+    }
+
+    return result[0].values.map((row) => this.sanitizeUser(this.rowToUser(row)));
+  }
+
   private validatePassword(password: string, role: string): void {
     if (role === 'parent') {
       // Parent passwords must be at least 6 characters
@@ -105,11 +144,12 @@ export class AuthService {
       username: row[1] as string,
       password: row[2] as string,
       role: row[3] as 'parent' | 'child',
-      avatar: row[4] as string | undefined,
-      level: row[5] as number,
-      total_points: row[6] as number,
-      created_at: row[7] as string,
-      updated_at: row[8] as string
+      parent_id: row[4] as number | undefined,
+      avatar: row[5] as string | undefined,
+      level: row[6] as number,
+      total_points: row[7] as number,
+      created_at: row[8] as string,
+      updated_at: row[9] as string
     };
   }
 }

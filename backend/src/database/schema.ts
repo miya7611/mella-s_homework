@@ -5,11 +5,13 @@ export const createTables = `
     username VARCHAR(50) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     role VARCHAR(10) NOT NULL CHECK(role IN ('parent', 'child')),
+    parent_id INTEGER,
     avatar VARCHAR(255),
     level INTEGER DEFAULT 1,
     total_points INTEGER DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (parent_id) REFERENCES users(id)
   );
 
   -- Tasks table
@@ -113,6 +115,7 @@ export const createTables = `
   CREATE INDEX IF NOT EXISTS idx_time_logs_user_id ON time_logs(user_id);
   CREATE INDEX IF NOT EXISTS idx_rewards_user_id ON rewards(user_id);
   CREATE INDEX IF NOT EXISTS idx_user_items_user_id ON user_items(user_id);
+  CREATE INDEX IF NOT EXISTS idx_users_parent_id ON users(parent_id);
 `;
 
 export function initializeSchema(db: any): void {

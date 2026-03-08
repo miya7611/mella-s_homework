@@ -4,6 +4,7 @@ export interface User {
   id: number;
   username: string;
   role: UserRole;
+  parent_id?: number;
   avatar?: string;
   level: number;
   total_points: number;
@@ -20,6 +21,12 @@ export interface RegisterData {
   username: string;
   password: string;
   role: UserRole;
+  avatar?: string;
+}
+
+export interface CreateChildData {
+  username: string;
+  password: string;
   avatar?: string;
 }
 

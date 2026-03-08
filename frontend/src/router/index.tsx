@@ -5,6 +5,7 @@ import { RegisterPage } from '../pages/RegisterPage';
 import { DashboardPage } from '../pages/DashboardPage';
 import { TasksPage } from '../pages/TasksPage';
 import { TaskCreatePage } from '../pages/TaskCreatePage';
+import { ChildrenPage } from '../pages/ChildrenPage';
 import { AppLayout } from '../components/layout/AppLayout';
 
 export const router = createBrowserRouter([
@@ -37,6 +38,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute requireParent>
             <TaskCreatePage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'children',
+        element: (
+          <ProtectedRoute requireParent>
+            <ChildrenPage />
           </ProtectedRoute>
         ),
       },

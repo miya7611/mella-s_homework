@@ -3,3 +3,4 @@ export { RegisterPage } from './RegisterPage';
 export { DashboardPage } from './DashboardPage';
 export { TasksPage } from './TasksPage';
 export { TaskCreatePage } from './TaskCreatePage';
+export { ChildrenPage } from './ChildrenPage';

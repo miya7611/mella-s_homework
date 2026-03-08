@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Home, ListTodo, PlusCircle } from 'lucide-react';
+import { Home, ListTodo, Users } from 'lucide-react';
 import { useAuthStore } from '../../stores';
 import { cn } from '../../lib/utils';
 
@@ -8,7 +8,7 @@ const navItems = [
   { to: '/tasks', icon: ListTodo, label: '任务' },
 ];
 
-const parentOnlyItems = [{ to: '/tasks/create', icon: PlusCircle, label: '创建' }];
+const parentOnlyItems = [{ to: '/children', icon: Users, label: '孩子' }];
 
 export function BottomNav() {
   const { user } = useAuthStore();
