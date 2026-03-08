@@ -7,12 +7,15 @@ export const TASK_CATEGORIES = [
   { value: 'other', label: '其他', icon: '📋' },
 ] as const;
 
-export const TASK_STATUS = {
+export const TASK_STATUS: Record<string, { label: string; color: 'gray' | 'blue' | 'yellow' | 'green' | 'red' }> = {
   pending: { label: '待处理', color: 'gray' },
   planned: { label: '已计划', color: 'blue' },
   in_progress: { label: '进行中', color: 'yellow' },
   completed: { label: '已完成', color: 'green' },
   overtime: { label: '超时', color: 'red' },
-} as const;
+};
+
+export type TaskStatusValue = keyof typeof TASK_STATUS;
+export type TaskCategoryValue = typeof TASK_CATEGORIES[number]['value'];
 
 export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';

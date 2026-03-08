@@ -22,8 +22,8 @@ export function TasksPage() {
     await updateTaskStatus(taskId, status);
   };
 
-  const handleTaskClick = (_task: Task) => {
-    // TODO: Navigate to task detail page
+  const handleTaskClick = (task: Task) => {
+    navigate(`/tasks/${task.id}`);
   };
 
   const isParent = user?.role === 'parent';

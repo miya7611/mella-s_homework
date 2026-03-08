@@ -6,6 +6,7 @@ import { DashboardPage } from '../pages/DashboardPage';
 import { TasksPage } from '../pages/TasksPage';
 import { TaskCreatePage } from '../pages/TaskCreatePage';
 import { ChildrenPage } from '../pages/ChildrenPage';
+import { TaskDetailPage } from '../pages/TaskDetailPage';
 import { AppLayout } from '../components/layout/AppLayout';
 
 export const router = createBrowserRouter([
@@ -40,6 +41,10 @@ export const router = createBrowserRouter([
             <TaskCreatePage />
           </ProtectedRoute>
         ),
+      },
+      {
+        path: 'tasks/:id',
+        element: <TaskDetailPage />,
       },
       {
         path: 'children',
