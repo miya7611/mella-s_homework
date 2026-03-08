@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Calendar, Clock, Trophy, Trash2 } from 'lucide-react';
-import { useTaskStore, useAuthStore } from '../stores';
+import { ArrowLeft, Calendar, Clock, Trophy, Trash2, Timer as TimerIcon } from 'lucide-react';
+import { useTaskStore, useAuthStore, useTimeStore } from '../stores';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
+import { Timer, TimeLogList } from '../components/time';
 import { TASK_STATUS, TASK_CATEGORIES } from '../lib/constants';
 import type { TaskStatus } from '../types/task';
 
@@ -13,6 +14,14 @@ export function TaskDetailPage() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const { currentTask, isLoading, error, fetchTaskById, updateTaskStatus, deleteTask, clearCurrentTask } = useTaskStore();
+  const {
+    timeLogs,
+    currentTimer,
+    fetchTimeLogsByTask,
+    startTimeLog,
+    stopTimeLog,
+    deleteTimeLog,
+  } = useTimeStore();
 
   const [isUpdating, setIsUpdating] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -20,16 +29,22 @@ export function TaskDetailPage() {
   useEffect(() => {
     if (id) {
       fetchTaskById(Number(id));
+      fetchTimeLogsByTask(Number(id));
     }
     return () => {
       clearCurrentTask();
     };
-  }, [id, fetchTaskById, clearCurrentTask]);
+  }, [id, fetchTaskById, fetchTimeLogsByTask, clearCurrentTask]);
 
   const isParent = user?.role === 'parent';
   const isAssignedToMe = currentTask?.assigned_to === user?.id;
   const canEdit = isParent && currentTask?.created_by === user?.id;
   const canUpdateStatus = isAssignedToMe;
+
+  // Find active timer for this task
+  const activeTimer = currentTimer && currentTimer.task_id === Number(id) ? currentTimer : null;
+  const isTimerRunning = activeTimer && !activeTimer.end_time;
+  const taskTimeLogs = timeLogs.filter((log) => log.task_id === Number(id));
 
   const handleStatusChange = async (status: TaskStatus) => {
     if (!currentTask) return;
@@ -51,6 +66,36 @@ export function TaskDetailPage() {
     }
   };
 
+  const handleStartTimer = async () => {
+    if (!currentTask) return;
+    try {
+      await startTimeLog(currentTask.id);
+      // If task is not in_progress, update status
+      if (currentTask.status !== 'in_progress') {
+        await updateTaskStatus(currentTask.id, 'in_progress');
+      }
+    } catch {
+      // Error handled by store
+    }
+  };
+
+  const handleStopTimer = async () => {
+    if (!activeTimer) return;
+    try {
+      await stopTimeLog(activeTimer.id, currentTask?.suggested_duration);
+    } catch {
+      // Error handled by store
+    }
+  };
+
+  const handleDeleteTimeLog = async (logId: number) => {
+    try {
+      await deleteTimeLog(logId);
+    } catch {
+      // Error handled by store
+    }
+  };
+
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('zh-CN', {
       year: 'numeric',
@@ -63,6 +108,12 @@ export function TaskDetailPage() {
   const formatTime = (time?: string) => {
     if (!time) return null;
     return time;
+  };
+
+  const calculateTotalDuration = () => {
+    return taskTimeLogs
+      .filter((log) => log.end_time)
+      .reduce((sum, log) => sum + log.duration, 0);
   };
 
   if (isLoading) {
@@ -114,6 +165,7 @@ export function TaskDetailPage() {
 
   const statusInfo = TASK_STATUS[currentTask.status];
   const categoryInfo = TASK_CATEGORIES.find((c) => c.value === currentTask.category);
+  const totalDuration = calculateTotalDuration();
 
   return (
     <div className="p-4 pb-24">
@@ -195,6 +247,46 @@ export function TaskDetailPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Timer (for assigned user) */}
+      {canUpdateStatus && currentTask.status !== 'completed' && (
+        <div className="mb-4">
+          <h3 className="text-sm font-medium mb-2 flex items-center gap-2">
+            <TimerIcon className="h-4 w-4" />
+            计时器
+          </h3>
+          <Timer
+            isRunning={isTimerRunning || false}
+            startTime={activeTimer?.start_time || null}
+            suggestedDuration={currentTask.suggested_duration}
+            onStart={handleStartTimer}
+            onStop={handleStopTimer}
+          />
+        </div>
+      )}
+
+      {/* Time Logs */}
+      {taskTimeLogs.length > 0 && (
+        <Card className="mb-4">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center justify-between">
+              <span>时间记录</span>
+              {totalDuration > 0 && (
+                <span className="text-sm text-muted-foreground font-normal">
+                  总计: {totalDuration} 分钟
+                </span>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TimeLogList
+              timeLogs={taskTimeLogs}
+              onDelete={isParent ? handleDeleteTimeLog : undefined}
+              showDelete={isParent}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Status Update (for assigned user) */}
       {canUpdateStatus && currentTask.status !== 'completed' && (

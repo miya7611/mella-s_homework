@@ -1,0 +1,11 @@
+export interface TimeLog {
+  id: number;
+  task_id: number;
+  user_id: number;
+  start_time: string;
+  end_time: string | null;
+  duration: number;
+  is_overtime: boolean;
+  notes?: string;
+  created_at: string;
+}
