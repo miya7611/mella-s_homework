@@ -31,3 +31,15 @@ export interface CreateRewardData {
 export interface ExchangeData {
   reward_id: number;
 }
+
+export interface PointsHistoryEntry {
+  id: number;
+  user_id: number;
+  task_id: number | null;
+  type: 'earned' | 'spent' | 'manual';
+  amount: number;
+  item_name?: string;
+  description?: string;
+  created_at: string;
+  task_title?: string;
+}

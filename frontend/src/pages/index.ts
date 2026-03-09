@@ -9,3 +9,4 @@ export { RewardsPage } from './RewardsPage';
 export { RewardCreatePage } from './RewardCreatePage';
 export { ExchangeHistoryPage } from './ExchangeHistoryPage';
 export { SettingsPage } from './SettingsPage';
+export { PointsHistoryPage } from './PointsHistoryPage';

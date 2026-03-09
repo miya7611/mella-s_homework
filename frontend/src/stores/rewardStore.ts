@@ -1,16 +1,18 @@
 import { create } from 'zustand';
-import type { ExchangeableReward, RewardExchange } from '../types/reward';
+import type { ExchangeableReward, RewardExchange, PointsHistoryEntry } from '../types/reward';
 import { rewardApi } from '../api/reward.api';
 import { extractErrorMessage } from '../lib/utils';
 
 interface RewardState {
   rewards: ExchangeableReward[];
   exchanges: RewardExchange[];
+  pointsHistory: PointsHistoryEntry[];
   isLoading: boolean;
   error: string | null;
 
   fetchRewards: () => Promise<void>;
   fetchExchangeHistory: () => Promise<void>;
+  fetchPointsHistory: () => Promise<void>;
   exchangeReward: (rewardId: number) => Promise<RewardExchange>;
   createReward: (data: { name: string; description?: string; required_points: number }) => Promise<ExchangeableReward>;
   clearError: () => void;
@@ -19,6 +21,7 @@ interface RewardState {
 export const useRewardStore = create<RewardState>()((set) => ({
   rewards: [],
   exchanges: [],
+  pointsHistory: [],
   isLoading: false,
   error: null,
 
@@ -40,6 +43,17 @@ export const useRewardStore = create<RewardState>()((set) => ({
       set({ exchanges, isLoading: false });
     } catch (error) {
       const message = extractErrorMessage(error, '获取兑换记录失败');
+      set({ error: message, isLoading: false });
+    }
+  },
+
+  fetchPointsHistory: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const pointsHistory = await rewardApi.getPointsHistory();
+      set({ pointsHistory, isLoading: false });
+    } catch (error) {
+      const message = extractErrorMessage(error, '获取积分记录失败');
       set({ error: message, isLoading: false });
     }
   },

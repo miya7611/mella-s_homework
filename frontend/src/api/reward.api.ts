@@ -1,6 +1,6 @@
 import client from './client';
 import type { ApiResponse } from '../types';
-import type { ExchangeableReward, RewardExchange, CreateRewardData } from '../types/reward';
+import type { ExchangeableReward, RewardExchange, CreateRewardData, PointsHistoryEntry } from '../types/reward';
 
 export const rewardApi = {
   getRewards: async (): Promise<ExchangeableReward[]> => {
@@ -33,6 +33,11 @@ export const rewardApi = {
       points,
       reason,
     });
+    return response.data.data;
+  },
+
+  getPointsHistory: async (): Promise<PointsHistoryEntry[]> => {
+    const response = await client.get<ApiResponse<PointsHistoryEntry[]>>('/api/rewards/points-history');
     return response.data.data;
   },
 };

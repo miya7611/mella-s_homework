@@ -123,6 +123,42 @@ export class RewardService {
     return { userId, pointsAdded: points, newTotal };
   }
 
+  // Get points history for a user
+  getPointsHistory(userId: number): PointsHistoryEntry[] {
+    const result = this.db.exec(`
+      SELECT
+        r.id,
+        r.user_id,
+        r.task_id,
+        r.type,
+        r.amount,
+        r.item_name,
+        r.description,
+        r.created_at,
+        COALESCE(t.title, '') as task_title
+      FROM rewards r
+      LEFT JOIN tasks t ON r.task_id = t.id
+      WHERE r.user_id = ?
+      ORDER BY r.created_at DESC
+    `, [userId]);
+
+    if (result.length === 0 || result[0].values.length === 0) {
+      return [];
+    }
+
+    return result[0].values.map((row) => ({
+      id: row[0] as number,
+      user_id: row[1] as number,
+      task_id: row[2] as number | null,
+      type: row[3] as 'earned' | 'spent' | 'manual',
+      amount: row[4] as number,
+      item_name: row[5] as string | undefined,
+      description: row[6] as string | undefined,
+      created_at: row[7] as string,
+      task_title: row[8] as string | undefined,
+    }));
+  }
+
   private rowToReward(row: any[]): ExchangeableReward {
     return {
       id: row[0] as number,

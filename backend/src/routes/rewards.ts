@@ -182,4 +182,22 @@ router.post('/add-points', authenticate, requireParent, async (req: AuthRequest,
   }
 });
 
+// Get points history for current user
+router.get('/points-history', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const rewardService = getRewardService();
+    const history = rewardService.getPointsHistory(req.user!.userId);
+
+    res.json({
+      success: true,
+      data: history
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: { code: 'FETCH_FAILED', message: error.message }
+    });
+  }
+});
+
 export default router;

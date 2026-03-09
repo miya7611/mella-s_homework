@@ -27,3 +27,15 @@ export interface CreateRewardData {
   required_points: number;
   required_items?: string;
 }
+
+export interface PointsHistoryEntry {
+  id: number;
+  user_id: number;
+  task_id: number | null;
+  type: 'earned' | 'spent' | 'manual';
+  amount: number;
+  item_name?: string;
+  description?: string;
+  created_at: string;
+  task_title?: string;
+}

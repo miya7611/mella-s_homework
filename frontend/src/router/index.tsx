@@ -11,6 +11,7 @@ import { RewardsPage } from '../pages/RewardsPage';
 import { RewardCreatePage } from '../pages/RewardCreatePage';
 import { ExchangeHistoryPage } from '../pages/ExchangeHistoryPage';
 import { SettingsPage } from '../pages/SettingsPage';
+import { PointsHistoryPage } from '../pages/PointsHistoryPage';
 import { AppLayout } from '../components/layout/AppLayout';
 
 export const router = createBrowserRouter([
@@ -73,6 +74,10 @@ export const router = createBrowserRouter([
       {
         path: 'rewards/history',
         element: <ExchangeHistoryPage />,
+      },
+      {
+        path: 'rewards/points-history',
+        element: <PointsHistoryPage />,
       },
       {
         path: 'settings',
