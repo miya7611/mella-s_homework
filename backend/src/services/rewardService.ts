@@ -1,5 +1,5 @@
 import { Database } from 'sql.js';
-import type { ExchangeableReward, RewardExchange, CreateRewardData } from '../models/Reward';
+import type { ExchangeableReward, RewardExchange, CreateRewardData, PointsHistoryEntry } from '../models/Reward';
 
 export class RewardService {
   constructor(private db: Database) {}

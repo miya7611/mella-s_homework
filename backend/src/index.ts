@@ -1,13 +1,15 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { initDatabase, getDatabase, saveDatabase } from './database/connection';
+import { initDatabase, saveDatabase } from './database/connection';
 import { createTables } from './database/schema';
+import { authenticate, requireParent, AuthRequest } from './middleware/auth';
 import authRoutes from './routes/auth';
 import tasksRoutes from './routes/tasks';
 import rewardsRoutes from './routes/rewards';
 import timeRoutes from './routes/time';
-import { authenticate, requireParent, AuthRequest } from './middleware/auth';
+import statsRoutes from './routes/stats';
+import templatesRoutes from './routes/templates';
 
 dotenv.config();
 
@@ -28,6 +30,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/tasks', tasksRoutes);
 app.use('/api/rewards', rewardsRoutes);
 app.use('/api/time', timeRoutes);
+app.use('/api/stats', statsRoutes);
+app.use('/api/templates', templatesRoutes);
 
 // Protected test routes
 app.get('/api/me', authenticate, (req: AuthRequest, res) => {

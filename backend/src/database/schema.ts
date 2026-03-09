@@ -107,6 +107,21 @@ export const createTables = `
     FOREIGN KEY (reward_id) REFERENCES exchangeable_rewards(id)
   );
 
+  -- Task templates table
+  CREATE TABLE IF NOT EXISTS task_templates (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name VARCHAR(200) NOT NULL,
+    description TEXT,
+    category VARCHAR(50) NOT NULL,
+    suggested_duration INTEGER,
+    points INTEGER DEFAULT 0,
+    created_by INTEGER NOT NULL,
+    is_active INTEGER DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES users(id)
+  );
+
   -- Create indexes
   CREATE INDEX IF NOT EXISTS idx_tasks_assigned_to ON tasks(assigned_to);
   CREATE INDEX IF NOT EXISTS idx_tasks_scheduled_date ON tasks(scheduled_date);
@@ -116,6 +131,7 @@ export const createTables = `
   CREATE INDEX IF NOT EXISTS idx_rewards_user_id ON rewards(user_id);
   CREATE INDEX IF NOT EXISTS idx_user_items_user_id ON user_items(user_id);
   CREATE INDEX IF NOT EXISTS idx_users_parent_id ON users(parent_id);
+  CREATE INDEX IF NOT EXISTS idx_task_templates_created_by ON task_templates(created_by);
 `;
 
 export function initializeSchema(db: any): void {

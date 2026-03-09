@@ -4,7 +4,7 @@ import { useAuthStore } from '../stores';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card, CardContent } from '../components/ui/Card';
-import { User, Lock, LogOut, ChevronRight } from 'lucide-react';
+import { User, Lock, LogOut, ChevronRight, LayoutTemplate } from 'lucide-react';
 
 const AVATARS = ['🐶', '🐱', '🐼', '🦊', '🦁', '🐸', '🐵', '🐰', '🐻', '🐨'];
 
@@ -212,6 +212,27 @@ export function SettingsPage() {
                 修改密码
               </Button>
             </form>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Parent Tools */}
+      {user.role === 'parent' && (
+        <Card className="mt-4">
+          <CardContent className="p-0">
+            <div className="p-3 border-b">
+              <h4 className="text-sm font-medium text-muted-foreground">家长工具</h4>
+            </div>
+            <button
+              onClick={() => navigate('/templates')}
+              className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors rounded-lg"
+            >
+              <div className="flex items-center gap-3">
+                <LayoutTemplate className="h-5 w-5" />
+                <span>任务模板</span>
+              </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            </button>
           </CardContent>
         </Card>
       )}

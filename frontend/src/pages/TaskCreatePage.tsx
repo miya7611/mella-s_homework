@@ -1,18 +1,32 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useChildrenStore, useAuthStore } from '../stores';
 import { TaskForm } from '../components/task';
 import { Card, CardContent } from '../components/ui/Card';
+import { templatesApi } from '../api/templates.api';
+import type { TaskTemplate } from '../types/template';
 
 export function TaskCreatePage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const templateId = searchParams.get('template');
   const { user } = useAuthStore();
   const { children, fetchChildren, isLoading } = useChildrenStore();
   const [selectedChildId, setSelectedChildId] = useState<number | null>(null);
+  const [template, setTemplate] = useState<TaskTemplate | null>(null);
 
   useEffect(() => {
     fetchChildren();
   }, [fetchChildren]);
+
+  useEffect(() => {
+    // Load template if templateId is provided
+    if (templateId) {
+      templatesApi.getTemplate(Number(templateId))
+        .then(setTemplate)
+        .catch(console.error);
+    }
+  }, [templateId]);
 
   useEffect(() => {
     // Auto-select first child if available
@@ -74,7 +88,12 @@ export function TaskCreatePage() {
       {/* Task Form */}
       {selectedChildId && (
         <div className="rounded-lg border bg-card p-6 shadow-sm">
-          <TaskForm assignedTo={selectedChildId} />
+          {template && (
+            <div className="mb-4 p-3 bg-primary/10 rounded-lg text-sm">
+              从模板创建: <span className="font-medium">{template.name}</span>
+            </div>
+          )}
+          <TaskForm assignedTo={selectedChildId} template={template || undefined} />
         </div>
       )}
     </div>

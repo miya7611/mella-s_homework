@@ -2,26 +2,28 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTaskStore } from '../../stores';
 import type { CreateTaskData } from '../../types/task';
+import type { TaskTemplate } from '../../types/template';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { TASK_CATEGORIES } from '../../lib/constants';
 
 interface TaskFormProps {
   assignedTo: number;
+  template?: TaskTemplate;
 }
 
-export function TaskForm({ assignedTo }: TaskFormProps) {
+export function TaskForm({ assignedTo, template }: TaskFormProps) {
   const navigate = useNavigate();
   const { createTask, isLoading, error, clearError } = useTaskStore();
 
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    category: 'homework',
-    suggested_duration: '',
+    title: template?.name || '',
+    description: template?.description || '',
+    category: template?.category || 'homework',
+    suggested_duration: template?.suggested_duration?.toString() || '',
     scheduled_date: new Date().toISOString().split('T')[0],
     scheduled_time: '',
-    points: '',
+    points: template?.points?.toString() || '',
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 

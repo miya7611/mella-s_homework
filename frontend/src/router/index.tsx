@@ -12,6 +12,9 @@ import { RewardCreatePage } from '../pages/RewardCreatePage';
 import { ExchangeHistoryPage } from '../pages/ExchangeHistoryPage';
 import { SettingsPage } from '../pages/SettingsPage';
 import { PointsHistoryPage } from '../pages/PointsHistoryPage';
+import { StatsPage } from '../pages/StatsPage';
+import { TemplatesPage } from '../pages/TemplatesPage';
+import { TemplateFormPage } from '../pages/TemplateFormPage';
 import { AppLayout } from '../components/layout/AppLayout';
 
 export const router = createBrowserRouter([
@@ -82,6 +85,34 @@ export const router = createBrowserRouter([
       {
         path: 'settings',
         element: <SettingsPage />,
+      },
+      {
+        path: 'stats',
+        element: <StatsPage />,
+      },
+      {
+        path: 'templates',
+        element: (
+          <ProtectedRoute requireParent>
+            <TemplatesPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'templates/create',
+        element: (
+          <ProtectedRoute requireParent>
+            <TemplateFormPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'templates/:id/edit',
+        element: (
+          <ProtectedRoute requireParent>
+            <TemplateFormPage />
+          </ProtectedRoute>
+        ),
       },
     ],
   },
