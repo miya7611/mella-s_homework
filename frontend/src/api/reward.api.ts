@@ -26,4 +26,13 @@ export const rewardApi = {
   fulfillExchange: async (exchangeId: number): Promise<void> => {
     await client.patch(`/api/rewards/exchanges/${exchangeId}/fulfill`);
   },
+
+  addPoints: async (userId: number, points: number, reason?: string): Promise<{ userId: number; pointsAdded: number; newTotal: number }> => {
+    const response = await client.post<ApiResponse<{ userId: number; pointsAdded: number; newTotal: number }>>('/api/rewards/add-points', {
+      user_id: userId,
+      points,
+      reason,
+    });
+    return response.data.data;
+  },
 };

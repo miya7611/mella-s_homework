@@ -100,6 +100,29 @@ export class RewardService {
     );
   }
 
+  // Add points to a user (parent can manually reward child)
+  addPointsToUser(userId: number, points: number, reason?: string): { userId: number; pointsAdded: number; newTotal: number } {
+    // Verify user exists
+    const userResult = this.db.exec('SELECT id, total_points FROM users WHERE id = ?', [userId]);
+    if (userResult.length === 0 || userResult[0].values.length === 0) {
+      throw new Error('USER_NOT_FOUND');
+    }
+
+    const currentPoints = userResult[0].values[0][1] as number;
+    const newTotal = currentPoints + points;
+
+    // Update user points
+    this.db.run('UPDATE users SET total_points = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [newTotal, userId]);
+
+    // Log the reward
+    this.db.run(
+      'INSERT INTO rewards (user_id, type, amount, description) VALUES (?, ?, ?, ?)',
+      [userId, 'points', points, reason || '家长奖励']
+    );
+
+    return { userId, pointsAdded: points, newTotal };
+  }
+
   private rowToReward(row: any[]): ExchangeableReward {
     return {
       id: row[0] as number,

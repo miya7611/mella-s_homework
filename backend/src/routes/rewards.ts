@@ -146,4 +146,40 @@ router.patch('/exchanges/:id/fulfill', authenticate, requireParent, async (req: 
   }
 });
 
+// Add points to user (parent only - for manual rewards)
+router.post('/add-points', authenticate, requireParent, async (req: AuthRequest, res) => {
+  try {
+    const { user_id, points, reason } = req.body;
+
+    if (!user_id || !points || points <= 0) {
+      return res.status(400).json({
+        success: false,
+        error: { code: 'MISSING_FIELDS', message: 'user_id and positive points are required' }
+      });
+    }
+
+    const rewardService = getRewardService();
+    const result = rewardService.addPointsToUser(user_id, points, reason);
+    saveDatabase();
+
+    res.json({
+      success: true,
+      data: result
+    });
+  } catch (error: any) {
+    let code = 'ADD_POINTS_FAILED';
+    let message = 'Failed to add points';
+
+    if (error.message === 'USER_NOT_FOUND') {
+      code = 'USER_NOT_FOUND';
+      message = 'User not found';
+    }
+
+    res.status(400).json({
+      success: false,
+      error: { code, message }
+    });
+  }
+});
+
 export default router;
