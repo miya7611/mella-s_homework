@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Calendar, Clock, Trophy, Trash2, Timer as TimerIcon } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, Trophy, Trash2, Timer as TimerIcon, MessageCircle, Send } from 'lucide-react';
 import { useTaskStore, useAuthStore, useTimeStore } from '../stores';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Timer, TimeLogList } from '../components/time';
 import { TASK_STATUS, TASK_CATEGORIES } from '../lib/constants';
+import { commentsApi } from '../api/comments.api';
 import type { TaskStatus } from '../types/task';
+import type { TaskComment } from '../types/comment';
 
 export function TaskDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -25,11 +27,25 @@ export function TaskDetailPage() {
 
   const [isUpdating, setIsUpdating] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [comments, setComments] = useState<TaskComment[]>([]);
+  const [newComment, setNewComment] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const fetchComments = async () => {
+    if (!id) return;
+    try {
+      const data = await commentsApi.getComments(Number(id));
+      setComments(data);
+    } catch (error) {
+      console.error('Failed to fetch comments:', error);
+    }
+  };
 
   useEffect(() => {
     if (id) {
       fetchTaskById(Number(id));
       fetchTimeLogsByTask(Number(id));
+      fetchComments();
     }
     return () => {
       clearCurrentTask();
@@ -93,6 +109,33 @@ export function TaskDetailPage() {
       await deleteTimeLog(logId);
     } catch {
       // Error handled by store
+    }
+  };
+
+  const handleAddComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newComment.trim() || !currentTask) return;
+
+    setIsSubmitting(true);
+    try {
+      const comment = await commentsApi.createComment(currentTask.id, { content: newComment.trim() });
+      setComments([comment, ...comments]);
+      setNewComment('');
+    } catch (error) {
+      console.error('Failed to add comment:', error);
+      alert('评论失败');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: number) => {
+    if (!currentTask) return;
+    try {
+      await commentsApi.deleteComment(currentTask.id, commentId);
+      setComments(comments.filter(c => c.id !== commentId));
+    } catch (error) {
+      console.error('Failed to delete comment:', error);
     }
   };
 
@@ -313,6 +356,74 @@ export function TaskDetailPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Comments Section */}
+      <Card className="mb-4">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base flex items-center gap-2">
+            <MessageCircle className="h-4 w-4" />
+            评论反馈
+            {comments.length > 0 && (
+              <span className="text-sm text-muted-foreground font-normal">({comments.length})</span>
+            )}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {/* Add Comment Form */}
+          <form onSubmit={handleAddComment} className="flex gap-2 mb-4">
+            <input
+              type="text"
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              placeholder="添加评论..."
+              className="flex-1 px-3 py-2 border rounded-md bg-background text-sm"
+              disabled={isSubmitting}
+            />
+            <Button type="submit" size="icon" disabled={!newComment.trim() || isSubmitting}>
+              <Send className="h-4 w-4" />
+            </Button>
+          </form>
+
+          {/* Comments List */}
+          {comments.length === 0 ? (
+            <p className="text-center text-muted-foreground text-sm py-4">暂无评论</p>
+          ) : (
+            <div className="space-y-3">
+              {comments.map((comment) => (
+                <div key={comment.id} className="flex gap-3 p-3 bg-muted/50 rounded-lg">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-sm">
+                    {comment.avatar || '👤'}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-sm font-medium">{comment.username || '用户'}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(comment.created_at).toLocaleString('zh-CN', {
+                            month: 'numeric',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </span>
+                        {(isParent || comment.user_id === user?.id) && (
+                          <button
+                            onClick={() => handleDeleteComment(comment.id)}
+                            className="text-muted-foreground hover:text-destructive"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <p className="text-sm mt-1 break-words">{comment.content}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Task Meta Info */}
       <Card>

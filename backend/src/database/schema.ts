@@ -122,6 +122,17 @@ export const createTables = `
     FOREIGN KEY (created_by) REFERENCES users(id)
   );
 
+  -- Task comments table
+  CREATE TABLE IF NOT EXISTS task_comments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    task_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (task_id) REFERENCES tasks(id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+  );
+
   -- Create indexes
   CREATE INDEX IF NOT EXISTS idx_tasks_assigned_to ON tasks(assigned_to);
   CREATE INDEX IF NOT EXISTS idx_tasks_scheduled_date ON tasks(scheduled_date);
@@ -132,6 +143,7 @@ export const createTables = `
   CREATE INDEX IF NOT EXISTS idx_user_items_user_id ON user_items(user_id);
   CREATE INDEX IF NOT EXISTS idx_users_parent_id ON users(parent_id);
   CREATE INDEX IF NOT EXISTS idx_task_templates_created_by ON task_templates(created_by);
+  CREATE INDEX IF NOT EXISTS idx_task_comments_task_id ON task_comments(task_id);
 `;
 
 export function initializeSchema(db: any): void {

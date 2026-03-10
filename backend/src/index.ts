@@ -10,6 +10,7 @@ import rewardsRoutes from './routes/rewards';
 import timeRoutes from './routes/time';
 import statsRoutes from './routes/stats';
 import templatesRoutes from './routes/templates';
+import commentsRoutes from './routes/comments';
 
 dotenv.config();
 
@@ -28,6 +29,7 @@ app.get('/health', async (req, res) => {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/tasks', tasksRoutes);
+app.use('/api/tasks/:taskId/comments', commentsRoutes);
 app.use('/api/rewards', rewardsRoutes);
 app.use('/api/time', timeRoutes);
 app.use('/api/stats', statsRoutes);
