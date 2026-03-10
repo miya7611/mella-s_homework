@@ -1,10 +1,11 @@
 import { NavLink } from 'react-router-dom';
-import { Home, ListTodo, Gift } from 'lucide-react';
+import { Home, ListTodo, Gift, Calendar } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 const navItems = [
   { to: '/', icon: Home, label: '首页' },
   { to: '/tasks', icon: ListTodo, label: '任务' },
+  { to: '/calendar', icon: Calendar, label: '日历' },
   { to: '/rewards', icon: Gift, label: '奖励' },
 ];
 

@@ -15,6 +15,7 @@ import { PointsHistoryPage } from '../pages/PointsHistoryPage';
 import { StatsPage } from '../pages/StatsPage';
 import { TemplatesPage } from '../pages/TemplatesPage';
 import { TemplateFormPage } from '../pages/TemplateFormPage';
+import { CalendarPage } from '../pages/CalendarPage';
 import { AppLayout } from '../components/layout/AppLayout';
 
 export const router = createBrowserRouter([
@@ -53,6 +54,10 @@ export const router = createBrowserRouter([
       {
         path: 'tasks/:id',
         element: <TaskDetailPage />,
+      },
+      {
+        path: 'calendar',
+        element: <CalendarPage />,
       },
       {
         path: 'children',
