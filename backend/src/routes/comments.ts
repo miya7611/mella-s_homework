@@ -1,11 +1,15 @@
 import { Router } from 'express';
 import { TaskCommentService } from '../services/taskCommentService';
+import { TaskService } from '../services/taskService';
+import { NotificationService } from '../services/notificationService';
 import { getDatabase } from '../database/connection';
 import { authenticate, AuthRequest } from '../middleware/auth';
 
 const router = Router({ mergeParams: true });
 
 const getCommentService = () => new TaskCommentService(getDatabase());
+const getTaskService = () => new TaskService(getDatabase());
+const getNotificationService = () => new NotificationService(getDatabase());
 
 // Get comments for a task
 router.get('/', authenticate, async (req: AuthRequest, res) => {
@@ -30,8 +34,11 @@ router.get('/', authenticate, async (req: AuthRequest, res) => {
 router.post('/', authenticate, async (req: AuthRequest, res) => {
   try {
     const commentService = getCommentService();
+    const taskService = getTaskService();
+    const notificationService = getNotificationService();
     const taskId = Number(req.params.taskId);
     const userId = req.user!.userId;
+    const username = req.user!.username;
     const { content } = req.body;
 
     if (!content || !content.trim()) {
@@ -42,6 +49,21 @@ router.post('/', authenticate, async (req: AuthRequest, res) => {
     }
 
     const comment = commentService.createComment(taskId, userId, { content: content.trim() });
+
+    // Get task info and send notification
+    const task = taskService.getTaskById(taskId);
+    if (task) {
+      // Notify the other party (if commenter is assigned user, notify creator, and vice versa)
+      const notifyUserId = userId === task.assigned_to ? task.created_by : task.assigned_to;
+      if (notifyUserId && notifyUserId !== userId) {
+        notificationService.createNotification(notifyUserId, {
+          type: 'new_comment',
+          title: '新评论',
+          message: `${username} 评论了任务「${task.title}」: ${content.substring(0, 50)}${content.length > 50 ? '...' : ''}`,
+          data: { taskId, commentId: comment.id }
+        });
+      }
+    }
 
     res.status(201).json({
       success: true,

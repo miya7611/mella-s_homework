@@ -1,6 +1,7 @@
 import { LogOut, User, Settings } from 'lucide-react';
 import { useAuthStore } from '../../stores';
 import { useNavigate } from 'react-router-dom';
+import { NotificationBell } from '../notification/NotificationBell';
 
 export function Header() {
   const { user, logout } = useAuthStore();
@@ -17,6 +18,8 @@ export function Header() {
         <h1 className="text-lg font-semibold">作业管理系统</h1>
 
         <div className="flex items-center gap-3">
+          <NotificationBell />
+
           <div className="flex items-center gap-2 text-sm">
             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
               <User className="h-4 w-4 text-primary" />

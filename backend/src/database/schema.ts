@@ -133,6 +133,19 @@ export const createTables = `
     FOREIGN KEY (user_id) REFERENCES users(id)
   );
 
+  -- Notifications table
+  CREATE TABLE IF NOT EXISTS notifications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    type VARCHAR(20) NOT NULL CHECK(type IN ('task_due', 'task_overdue', 'new_comment', 'task_assigned', 'task_completed', 'points_earned')),
+    title VARCHAR(200) NOT NULL,
+    message TEXT NOT NULL,
+    data TEXT,
+    is_read INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+  );
+
   -- Create indexes
   CREATE INDEX IF NOT EXISTS idx_tasks_assigned_to ON tasks(assigned_to);
   CREATE INDEX IF NOT EXISTS idx_tasks_scheduled_date ON tasks(scheduled_date);
@@ -144,6 +157,8 @@ export const createTables = `
   CREATE INDEX IF NOT EXISTS idx_users_parent_id ON users(parent_id);
   CREATE INDEX IF NOT EXISTS idx_task_templates_created_by ON task_templates(created_by);
   CREATE INDEX IF NOT EXISTS idx_task_comments_task_id ON task_comments(task_id);
+  CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
+  CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON notifications(is_read);
 `;
 
 export function initializeSchema(db: any): void {

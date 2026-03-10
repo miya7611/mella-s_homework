@@ -1,11 +1,13 @@
 import { Router } from 'express';
 import { TaskService } from '../services/taskService';
+import { NotificationService } from '../services/notificationService';
 import { getDatabase, saveDatabase } from '../database/connection';
 import { authenticate, requireParent, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
 const getTaskService = () => new TaskService(getDatabase());
+const getNotificationService = () => new NotificationService(getDatabase());
 
 // Create task (parent only)
 router.post('/', authenticate, requireParent, async (req: AuthRequest, res) => {
@@ -23,10 +25,20 @@ router.post('/', authenticate, requireParent, async (req: AuthRequest, res) => {
     }
 
     const taskService = getTaskService();
+    const notificationService = getNotificationService();
     const task = taskService.createTask(
       { title, description, category, assigned_to, suggested_duration, scheduled_date, scheduled_time, points: points || 0, bonus_items, overtime_penalty },
       req.user!.userId
     );
+
+    // Send notification to assigned user
+    notificationService.createNotification(assigned_to, {
+      type: 'task_assigned',
+      title: '新任务分配',
+      message: `你被分配了一个新任务「${title}」，截止日期：${scheduled_date}`,
+      data: { taskId: task.id }
+    });
+
     saveDatabase();
 
     res.status(201).json({
@@ -146,6 +158,7 @@ router.patch('/:id/status', authenticate, async (req: AuthRequest, res) => {
     }
 
     const taskService = getTaskService();
+    const notificationService = getNotificationService();
     const task = taskService.getTaskById(Number(req.params.id));
 
     if (!task) {
@@ -164,6 +177,17 @@ router.patch('/:id/status', authenticate, async (req: AuthRequest, res) => {
     }
 
     const updatedTask = taskService.updateTaskStatus(Number(req.params.id), status);
+
+    // Send notification to task creator when task is completed
+    if (status === 'completed' && task.created_by !== task.assigned_to) {
+      notificationService.createNotification(task.created_by, {
+        type: 'task_completed',
+        title: '任务完成',
+        message: `任务「${task.title}」已完成`,
+        data: { taskId: task.id }
+      });
+    }
+
     saveDatabase();
 
     res.json({

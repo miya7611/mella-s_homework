@@ -11,6 +11,7 @@ import timeRoutes from './routes/time';
 import statsRoutes from './routes/stats';
 import templatesRoutes from './routes/templates';
 import commentsRoutes from './routes/comments';
+import notificationsRoutes from './routes/notifications';
 
 dotenv.config();
 
@@ -34,6 +35,7 @@ app.use('/api/rewards', rewardsRoutes);
 app.use('/api/time', timeRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/templates', templatesRoutes);
+app.use('/api/notifications', notificationsRoutes);
 
 // Protected test routes
 app.get('/api/me', authenticate, (req: AuthRequest, res) => {
