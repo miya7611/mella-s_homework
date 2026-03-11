@@ -6,11 +6,14 @@ import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Timer, TimeLogList } from '../components/time';
+import { FileUpload } from '../components/task/FileUpload';
 import { TASK_STATUS, TASK_CATEGORIES } from '../lib/constants';
 import { commentsApi } from '../api/comments.api';
+import { attachmentsApi } from '../api/attachments.api';
 import { taskApi } from '../api/task.api';
 import type { TaskStatus } from '../types/task';
 import type { TaskComment } from '../types/comment';
+import type { Attachment } from '../types/attachment';
 
 export function TaskDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -33,6 +36,7 @@ export function TaskDetailPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [reviewComment, setReviewComment] = useState('');
   const [showReviewForm, setShowReviewForm] = useState(false);
+  const [attachments, setAttachments] = useState<Omit<Attachment, 'content'>[]>([]);
 
   const fetchComments = async () => {
     if (!id) return;
@@ -44,11 +48,22 @@ export function TaskDetailPage() {
     }
   };
 
+  const fetchAttachments = async () => {
+    if (!id) return;
+    try {
+      const data = await attachmentsApi.getAttachments(Number(id));
+      setAttachments(data);
+    } catch (error) {
+      console.error('Failed to fetch attachments:', error);
+    }
+  };
+
   useEffect(() => {
     if (id) {
       fetchTaskById(Number(id));
       fetchTimeLogsByTask(Number(id));
       fetchComments();
+      fetchAttachments();
     }
     return () => {
       clearCurrentTask();
@@ -359,6 +374,17 @@ export function TaskDetailPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Attachments */}
+      <Card className="mb-4">
+        <CardContent className="p-4">
+          <FileUpload
+            taskId={Number(id)}
+            attachments={attachments}
+            onAttachmentsChange={fetchAttachments}
+          />
+        </CardContent>
+      </Card>
 
       {/* Status Update (for assigned user) */}
       {canUpdateStatus && !['completed', 'pending_review', 'rejected'].includes(currentTask.status) && (

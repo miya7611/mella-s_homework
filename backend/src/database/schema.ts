@@ -184,6 +184,20 @@ export const createTables = `
     UNIQUE(task_id, tag_id)
   );
 
+  -- Task attachments table
+  CREATE TABLE IF NOT EXISTS task_attachments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    task_id INTEGER NOT NULL,
+    file_name VARCHAR(255) NOT NULL,
+    file_type VARCHAR(100),
+    file_size INTEGER,
+    content TEXT,
+    uploaded_by INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
+    FOREIGN KEY (uploaded_by) REFERENCES users(id)
+  );
+
   -- Create indexes
   CREATE INDEX IF NOT EXISTS idx_tasks_assigned_to ON tasks(assigned_to);
   CREATE INDEX IF NOT EXISTS idx_tasks_scheduled_date ON tasks(scheduled_date);
@@ -201,6 +215,7 @@ export const createTables = `
   CREATE INDEX IF NOT EXISTS idx_tags_created_by ON tags(created_by);
   CREATE INDEX IF NOT EXISTS idx_task_tags_task_id ON task_tags(task_id);
   CREATE INDEX IF NOT EXISTS idx_task_tags_tag_id ON task_tags(tag_id);
+  CREATE INDEX IF NOT EXISTS idx_task_attachments_task_id ON task_attachments(task_id);
 `;
 
 export function initializeSchema(db: any): void {
