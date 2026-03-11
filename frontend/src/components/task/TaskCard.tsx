@@ -1,9 +1,15 @@
-import { Clock, Calendar, Trophy } from 'lucide-react';
-import type { Task, TaskStatus } from '../../types/task';
+import { Clock, Calendar, Trophy, Flag } from 'lucide-react';
+import type { Task, TaskStatus, Priority } from '../../types/task';
 import { Card, CardContent } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { TASK_STATUS, TASK_CATEGORIES } from '../../lib/constants';
 import { cn } from '../../lib/utils';
+
+const PRIORITY_CONFIG: Record<Priority, { label: string; color: string; bgColor: string }> = {
+  low: { label: '低', color: 'text-green-600', bgColor: 'bg-green-100' },
+  medium: { label: '中', color: 'text-yellow-600', bgColor: 'bg-yellow-100' },
+  high: { label: '高', color: 'text-red-600', bgColor: 'bg-red-100' },
+};
 
 interface TaskCardProps {
   task: Task;
@@ -14,6 +20,7 @@ interface TaskCardProps {
 export function TaskCard({ task, onStatusChange, onClick }: TaskCardProps) {
   const statusInfo = TASK_STATUS[task.status];
   const categoryInfo = TASK_CATEGORIES.find((c) => c.value === task.category);
+  const priorityInfo = PRIORITY_CONFIG[task.priority || 'medium'];
 
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('zh-CN', {
@@ -69,7 +76,13 @@ export function TaskCard({ task, onStatusChange, onClick }: TaskCardProps) {
             </div>
           </div>
 
-          <Badge variant={statusInfo.color as any}>{statusInfo.label}</Badge>
+          <div className="flex items-center gap-2">
+            <span className={cn('flex items-center gap-1 px-2 py-0.5 rounded text-xs', priorityInfo.bgColor, priorityInfo.color)}>
+              <Flag className="h-3 w-3" />
+              {priorityInfo.label}
+            </span>
+            <Badge variant={statusInfo.color as any}>{statusInfo.label}</Badge>
+          </div>
         </div>
 
         {onStatusChange && task.status !== 'completed' && (

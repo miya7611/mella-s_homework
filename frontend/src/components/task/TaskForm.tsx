@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTaskStore } from '../../stores';
-import type { CreateTaskData, RepeatType, RepeatConfig } from '../../types/task';
+import type { CreateTaskData, RepeatType, RepeatConfig, Priority } from '../../types/task';
 import type { TaskTemplate } from '../../types/template';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
@@ -19,6 +19,12 @@ const REPEAT_OPTIONS: { value: RepeatType; label: string }[] = [
   { value: 'monthly', label: '每月' },
 ];
 
+const PRIORITY_OPTIONS: { value: Priority; label: string; color: string }[] = [
+  { value: 'low', label: '低优先级', color: 'text-green-600' },
+  { value: 'medium', label: '中优先级', color: 'text-yellow-600' },
+  { value: 'high', label: '高优先级', color: 'text-red-600' },
+];
+
 export function TaskForm({ assignedTo, template }: TaskFormProps) {
   const navigate = useNavigate();
   const { createTask, isLoading, error, clearError } = useTaskStore();
@@ -33,6 +39,7 @@ export function TaskForm({ assignedTo, template }: TaskFormProps) {
     points: template?.points?.toString() || '',
     repeat_type: 'none' as RepeatType,
     repeat_end_date: '',
+    priority: 'medium' as Priority,
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
@@ -69,6 +76,7 @@ export function TaskForm({ assignedTo, template }: TaskFormProps) {
       points: formData.points ? Number(formData.points) : 0,
       repeat_type: formData.repeat_type,
       repeat_config: repeatConfig,
+      priority: formData.priority,
     };
 
     try {
@@ -178,6 +186,26 @@ export function TaskForm({ assignedTo, template }: TaskFormProps) {
           onChange={handleChange}
           min={0}
         />
+      </div>
+
+      {/* Priority Selection */}
+      <div className="space-y-1.5">
+        <label htmlFor="priority" className="text-sm font-medium text-foreground">
+          优先级
+        </label>
+        <select
+          id="priority"
+          name="priority"
+          value={formData.priority}
+          onChange={handleChange}
+          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          {PRIORITY_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
       </div>
 
       {/* Repeat Options */}

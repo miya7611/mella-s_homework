@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { Bell, Check, CheckCheck, Trash2, X } from 'lucide-react';
+import { Bell, CheckCheck, Trash2, X } from 'lucide-react';
 import { useNotificationStore } from '../../stores';
-import { NOTIFICATION_ICONS, NOTIFICATION_COLORS } from '../../types/notification';
+import { NOTIFICATION_ICONS } from '../../types/notification';
 import type { Notification } from '../../types/notification';
 
 export function NotificationBell() {

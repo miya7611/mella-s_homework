@@ -38,7 +38,6 @@ router.post('/', authenticate, async (req: AuthRequest, res) => {
     const notificationService = getNotificationService();
     const taskId = Number(req.params.taskId);
     const userId = req.user!.userId;
-    const username = req.user!.username;
     const { content } = req.body;
 
     if (!content || !content.trim()) {
@@ -59,7 +58,7 @@ router.post('/', authenticate, async (req: AuthRequest, res) => {
         notificationService.createNotification(notifyUserId, {
           type: 'new_comment',
           title: '新评论',
-          message: `${username} 评论了任务「${task.title}」: ${content.substring(0, 50)}${content.length > 50 ? '...' : ''}`,
+          message: `有人评论了任务「${task.title}」: ${content.trim().substring(0, 50)}${content.length > 50 ? '...' : ''}`,
           data: { taskId, commentId: comment.id }
         });
       }

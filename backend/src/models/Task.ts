@@ -1,5 +1,6 @@
 export type TaskStatus = 'pending' | 'planned' | 'in_progress' | 'pending_review' | 'completed' | 'rejected' | 'overtime';
 export type RepeatType = 'none' | 'daily' | 'weekly' | 'monthly';
+export type Priority = 'low' | 'medium' | 'high';
 
 export interface RepeatConfig {
   endDate?: string; // 结束日期
@@ -19,6 +20,7 @@ export interface Task {
   scheduled_date: string;
   scheduled_time?: string;
   status: TaskStatus;
+  priority: Priority;
   review_comment?: string;
   points: number;
   bonus_items?: string;
@@ -46,6 +48,7 @@ export interface CreateTaskData {
   overtime_penalty?: string;
   repeat_type?: RepeatType;
   repeat_config?: RepeatConfig;
+  priority?: Priority;
 }
 
 export interface UpdateTaskData {
@@ -60,4 +63,5 @@ export interface UpdateTaskData {
   overtime_penalty?: string;
   status?: TaskStatus;
   review_comment?: string;
+  priority?: Priority;
 }

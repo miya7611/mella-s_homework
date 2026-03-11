@@ -26,6 +26,7 @@ export const createTables = `
     scheduled_date DATE NOT NULL,
     scheduled_time TIME,
     status VARCHAR(20) DEFAULT 'pending' CHECK(status IN ('pending', 'planned', 'in_progress', 'pending_review', 'completed', 'rejected', 'overtime')),
+    priority VARCHAR(10) DEFAULT 'medium' CHECK(priority IN ('low', 'medium', 'high')),
     review_comment TEXT,
     points INTEGER DEFAULT 0,
     bonus_items TEXT,

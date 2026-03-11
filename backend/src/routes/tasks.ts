@@ -12,7 +12,7 @@ const getNotificationService = () => new NotificationService(getDatabase());
 // Create task (parent only)
 router.post('/', authenticate, requireParent, async (req: AuthRequest, res) => {
   try {
-    const { title, description, category, assigned_to, suggested_duration, scheduled_date, scheduled_time, points, bonus_items, overtime_penalty, repeat_type, repeat_config } = req.body;
+    const { title, description, category, assigned_to, suggested_duration, scheduled_date, scheduled_time, points, bonus_items, overtime_penalty, repeat_type, repeat_config, priority } = req.body;
 
     if (!title || !category || !assigned_to || !scheduled_date) {
       return res.status(400).json({
@@ -27,7 +27,7 @@ router.post('/', authenticate, requireParent, async (req: AuthRequest, res) => {
     const taskService = getTaskService();
     const notificationService = getNotificationService();
     const task = taskService.createTask(
-      { title, description, category, assigned_to, suggested_duration, scheduled_date, scheduled_time, points: points || 0, bonus_items, overtime_penalty, repeat_type, repeat_config },
+      { title, description, category, assigned_to, suggested_duration, scheduled_date, scheduled_time, points: points || 0, bonus_items, overtime_penalty, repeat_type, repeat_config, priority },
       req.user!.userId
     );
 
@@ -71,6 +71,61 @@ router.get('/', authenticate, async (req: AuthRequest, res) => {
       // Default: get tasks for current user
       tasks = taskService.getTasksByUser(req.user!.userId);
     }
+
+    res.json({
+      success: true,
+      data: tasks
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: { code: 'FETCH_FAILED', message: error.message }
+    });
+  }
+});
+
+// Get upcoming tasks (due within X days)
+router.get('/upcoming', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const taskService = getTaskService();
+    const days = Number(req.query.days) || 3;
+    const tasks = taskService.getUpcomingTasks(req.user!.userId, days);
+
+    res.json({
+      success: true,
+      data: tasks
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: { code: 'FETCH_FAILED', message: error.message }
+    });
+  }
+});
+
+// Get overdue tasks
+router.get('/overdue', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const taskService = getTaskService();
+    const tasks = taskService.getOverdueTasks(req.user!.userId);
+
+    res.json({
+      success: true,
+      data: tasks
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: { code: 'FETCH_FAILED', message: error.message }
+    });
+  }
+});
+
+// Get tasks due today
+router.get('/due-today', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const taskService = getTaskService();
+    const tasks = taskService.getDueTodayTasks(req.user!.userId);
 
     res.json({
       success: true,

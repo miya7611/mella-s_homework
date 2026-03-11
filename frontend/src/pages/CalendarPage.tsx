@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Calendar } from '../components/calendar/Calendar';
 import { TaskCard } from '../components/task/TaskCard';
 import { useTaskStore, useAuthStore } from '../stores';
-import type { Task } from '../types/task';
 
 export function CalendarPage() {
   const navigate = useNavigate();

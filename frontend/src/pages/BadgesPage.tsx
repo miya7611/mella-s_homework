@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Trophy, Lock, CheckCircle } from 'lucide-react';
-import { useAuthStore } from '../stores';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
+import { Card, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { Badge } from '../types/badge';
+import type { Badge } from '../types/badge';
 
 const BADGE_INFO: Record<string, { name: string; description: string; icon: string; requirement: string }> = {
   first_task: {
@@ -81,9 +80,7 @@ const BADGE_INFO: Record<string, { name: string; description: string; icon: stri
 };
 
 export function BadgesPage() {
-  const { user } = useAuthStore();
   const [earnedBadges, setEarnedBadges] = useState<Badge[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [newBadges, setNewBadges] = useState<Badge[]>([]);
 
   useEffect(() => {
@@ -91,7 +88,6 @@ export function BadgesPage() {
   }, []);
 
   const fetchBadges = async () => {
-    setIsLoading(true);
     try {
       const response = await fetch('http://localhost:3000/api/badges', {
         headers: {
@@ -104,8 +100,6 @@ export function BadgesPage() {
       }
     } catch (error) {
       console.error('Failed to fetch badges:', error);
-    } finally {
-      setIsLoading(false);
     }
   };
 

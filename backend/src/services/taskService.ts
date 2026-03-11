@@ -1,4 +1,4 @@
-import { Task, CreateTaskData, UpdateTaskData, RepeatType, RepeatConfig } from '../models/Task';
+import { Task, CreateTaskData, UpdateTaskData, RepeatType, RepeatConfig, Priority } from '../models/Task';
 import { Database } from 'sql.js';
 
 export class TaskService {
@@ -11,8 +11,8 @@ export class TaskService {
       `INSERT INTO tasks (
         title, description, category, assigned_to, created_by,
         suggested_duration, scheduled_date, scheduled_time,
-        points, bonus_items, overtime_penalty, status, repeat_type, repeat_config
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)`,
+        points, bonus_items, overtime_penalty, status, repeat_type, repeat_config, priority
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?)`,
       [
         data.title,
         data.description || null,
@@ -26,7 +26,8 @@ export class TaskService {
         data.bonus_items || null,
         data.overtime_penalty || null,
         data.repeat_type || 'none',
-        repeatConfigJson
+        repeatConfigJson,
+        data.priority || 'medium'
       ]
     );
 
@@ -65,6 +66,58 @@ export class TaskService {
       'SELECT * FROM tasks WHERE created_by = ? ORDER BY scheduled_date DESC',
       [createdBy]
     );
+    if (result.length === 0) return [];
+    return result[0].values.map(row => this.rowToTask(row));
+  }
+
+  getUpcomingTasks(userId: number, days: number = 3): Task[] {
+    const today = new Date().toISOString().split('T')[0];
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + days);
+    const futureDateStr = futureDate.toISOString().split('T')[0];
+
+    const result = this.db.exec(
+      `SELECT * FROM tasks
+       WHERE assigned_to = ?
+       AND status NOT IN ('completed', 'rejected')
+       AND scheduled_date >= ?
+       AND scheduled_date <= ?
+       ORDER BY scheduled_date, scheduled_time`,
+      [userId, today, futureDateStr]
+    );
+
+    if (result.length === 0) return [];
+    return result[0].values.map(row => this.rowToTask(row));
+  }
+
+  getOverdueTasks(userId: number): Task[] {
+    const today = new Date().toISOString().split('T')[0];
+
+    const result = this.db.exec(
+      `SELECT * FROM tasks
+       WHERE assigned_to = ?
+       AND status NOT IN ('completed', 'rejected')
+       AND scheduled_date < ?
+       ORDER BY scheduled_date`,
+      [userId, today]
+    );
+
+    if (result.length === 0) return [];
+    return result[0].values.map(row => this.rowToTask(row));
+  }
+
+  getDueTodayTasks(userId: number): Task[] {
+    const today = new Date().toISOString().split('T')[0];
+
+    const result = this.db.exec(
+      `SELECT * FROM tasks
+       WHERE assigned_to = ?
+       AND status NOT IN ('completed', 'rejected')
+       AND scheduled_date = ?
+       ORDER BY scheduled_time`,
+      [userId, today]
+    );
+
     if (result.length === 0) return [];
     return result[0].values.map(row => this.rowToTask(row));
   }
@@ -261,18 +314,19 @@ export class TaskService {
       scheduled_date: row[7] as string,
       scheduled_time: row[8] as string | undefined,
       status: row[9] as Task['status'],
-      review_comment: row[10] as string | undefined,
-      points: row[11] as number,
-      bonus_items: row[12] as string | undefined,
-      overtime_penalty: row[13] as string | undefined,
-      actual_start_time: row[14] as string | undefined,
-      actual_end_time: row[15] as string | undefined,
-      overtime_minutes: row[16] as number,
-      repeat_type: (row[17] as string || 'none') as RepeatType,
-      repeat_config: row[18] as string | undefined,
-      parent_task_id: row[19] as number | undefined,
-      created_at: row[20] as string,
-      updated_at: row[21] as string
+      priority: (row[10] as string || 'medium') as Priority,
+      review_comment: row[11] as string | undefined,
+      points: row[12] as number,
+      bonus_items: row[13] as string | undefined,
+      overtime_penalty: row[14] as string | undefined,
+      actual_start_time: row[15] as string | undefined,
+      actual_end_time: row[16] as string | undefined,
+      overtime_minutes: row[17] as number,
+      repeat_type: (row[18] as string || 'none') as RepeatType,
+      repeat_config: row[19] as string | undefined,
+      parent_task_id: row[20] as number | undefined,
+      created_at: row[21] as string,
+      updated_at: row[22] as string
     };
   }
 }

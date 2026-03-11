@@ -78,7 +78,6 @@ export function Calendar({ tasks, selectedDate, onDateSelect }: CalendarProps) {
   };
 
   const days = getDaysInMonth();
-  const today = new Date();
 
   return (
     <div className="bg-card rounded-lg border p-4">

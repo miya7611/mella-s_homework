@@ -49,4 +49,20 @@ export const taskApi = {
     });
     return response.data.data;
   },
+
+  getUpcomingTasks: async (days?: number): Promise<Task[]> => {
+    const params = days ? `?days=${days}` : '';
+    const response = await client.get<ApiResponse<Task[]>>(`/api/tasks/upcoming${params}`);
+    return response.data.data;
+  },
+
+  getOverdueTasks: async (): Promise<Task[]> => {
+    const response = await client.get<ApiResponse<Task[]>>('/api/tasks/overdue');
+    return response.data.data;
+  },
+
+  getDueTodayTasks: async (): Promise<Task[]> => {
+    const response = await client.get<ApiResponse<Task[]>>('/api/tasks/due-today');
+    return response.data.data;
+  },
 };
