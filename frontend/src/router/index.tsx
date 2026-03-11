@@ -16,6 +16,7 @@ import { StatsPage } from '../pages/StatsPage';
 import { TemplatesPage } from '../pages/TemplatesPage';
 import { TemplateFormPage } from '../pages/TemplateFormPage';
 import { CalendarPage } from '../pages/CalendarPage';
+import { BadgesPage } from '../pages/BadgesPage';
 import { AppLayout } from '../components/layout/AppLayout';
 
 export const router = createBrowserRouter([
@@ -118,6 +119,10 @@ export const router = createBrowserRouter([
             <TemplateFormPage />
           </ProtectedRoute>
         ),
+      },
+      {
+        path: 'badges',
+        element: <BadgesPage />,
       },
     ],
   },

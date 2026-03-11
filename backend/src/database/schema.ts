@@ -151,6 +151,16 @@ export const createTables = `
     FOREIGN KEY (user_id) REFERENCES users(id)
   );
 
+  -- Badges table
+  CREATE TABLE IF NOT EXISTS badges (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    badge_type VARCHAR(50) NOT NULL CHECK(badge_type IN ('first_task', 'task_master_10', 'task_master_50', 'task_master_100', 'streak_3', 'streak_7', 'streak_30', 'points_100', 'points_500', 'points_1000', 'early_bird', 'category_master')),
+    earned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    UNIQUE(user_id, badge_type)
+  );
+
   -- Create indexes
   CREATE INDEX IF NOT EXISTS idx_tasks_assigned_to ON tasks(assigned_to);
   CREATE INDEX IF NOT EXISTS idx_tasks_scheduled_date ON tasks(scheduled_date);
@@ -164,6 +174,7 @@ export const createTables = `
   CREATE INDEX IF NOT EXISTS idx_task_comments_task_id ON task_comments(task_id);
   CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
   CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON notifications(is_read);
+  CREATE INDEX IF NOT EXISTS idx_badges_user_id ON badges(user_id);
 `;
 
 export function initializeSchema(db: any): void {
