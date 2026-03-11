@@ -1,16 +1,18 @@
-import { Task, CreateTaskData, UpdateTaskData } from '../models/Task';
+import { Task, CreateTaskData, UpdateTaskData, RepeatType, RepeatConfig } from '../models/Task';
 import { Database } from 'sql.js';
 
 export class TaskService {
   constructor(private db: Database) {}
 
   createTask(data: CreateTaskData, createdBy: number): Task {
+    const repeatConfigJson = data.repeat_config ? JSON.stringify(data.repeat_config) : null;
+
     this.db.run(
       `INSERT INTO tasks (
         title, description, category, assigned_to, created_by,
         suggested_duration, scheduled_date, scheduled_time,
-        points, bonus_items, overtime_penalty, status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
+        points, bonus_items, overtime_penalty, status, repeat_type, repeat_config
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?)`,
       [
         data.title,
         data.description || null,
@@ -22,7 +24,9 @@ export class TaskService {
         data.scheduled_time || null,
         data.points,
         data.bonus_items || null,
-        data.overtime_penalty || null
+        data.overtime_penalty || null,
+        data.repeat_type || 'none',
+        repeatConfigJson
       ]
     );
 
@@ -188,6 +192,63 @@ export class TaskService {
     return true;
   }
 
+  createRecurringTask(taskId: number): Task | null {
+    const task = this.getTaskById(taskId);
+    if (!task || task.repeat_type === 'none') return null;
+
+    const nextDate = this.getNextRecurringDate(task.scheduled_date, task.repeat_type);
+    if (!nextDate) return null;
+
+    // Check if config limits are exceeded
+    if (task.repeat_config) {
+      const config: RepeatConfig = JSON.parse(task.repeat_config);
+      if (config.endDate && nextDate > config.endDate) return null;
+    }
+
+    const newTask = this.createTask({
+      title: task.title,
+      description: task.description,
+      category: task.category,
+      assigned_to: task.assigned_to,
+      suggested_duration: task.suggested_duration,
+      scheduled_date: nextDate,
+      scheduled_time: task.scheduled_time,
+      points: task.points,
+      bonus_items: task.bonus_items,
+      overtime_penalty: task.overtime_penalty,
+      repeat_type: task.repeat_type,
+      repeat_config: task.repeat_config ? JSON.parse(task.repeat_config) : undefined
+    }, task.created_by);
+
+    // Set parent task id
+    this.db.run(
+      'UPDATE tasks SET parent_task_id = ? WHERE id = ?',
+      [taskId, newTask.id]
+    );
+
+    return this.getTaskById(newTask.id);
+  }
+
+  private getNextRecurringDate(currentDate: string, repeatType: RepeatType): string | null {
+    const date = new Date(currentDate);
+
+    switch (repeatType) {
+      case 'daily':
+        date.setDate(date.getDate() + 1);
+        break;
+      case 'weekly':
+        date.setDate(date.getDate() + 7);
+        break;
+      case 'monthly':
+        date.setMonth(date.getMonth() + 1);
+        break;
+      default:
+        return null;
+    }
+
+    return date.toISOString().split('T')[0];
+  }
+
   private rowToTask(row: any[]): Task {
     return {
       id: row[0] as number,
@@ -207,8 +268,11 @@ export class TaskService {
       actual_start_time: row[14] as string | undefined,
       actual_end_time: row[15] as string | undefined,
       overtime_minutes: row[16] as number,
-      created_at: row[17] as string,
-      updated_at: row[18] as string
+      repeat_type: (row[17] as string || 'none') as RepeatType,
+      repeat_config: row[18] as string | undefined,
+      parent_task_id: row[19] as number | undefined,
+      created_at: row[20] as string,
+      updated_at: row[21] as string
     };
   }
 }

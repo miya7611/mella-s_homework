@@ -12,7 +12,7 @@ const getNotificationService = () => new NotificationService(getDatabase());
 // Create task (parent only)
 router.post('/', authenticate, requireParent, async (req: AuthRequest, res) => {
   try {
-    const { title, description, category, assigned_to, suggested_duration, scheduled_date, scheduled_time, points, bonus_items, overtime_penalty } = req.body;
+    const { title, description, category, assigned_to, suggested_duration, scheduled_date, scheduled_time, points, bonus_items, overtime_penalty, repeat_type, repeat_config } = req.body;
 
     if (!title || !category || !assigned_to || !scheduled_date) {
       return res.status(400).json({
@@ -27,7 +27,7 @@ router.post('/', authenticate, requireParent, async (req: AuthRequest, res) => {
     const taskService = getTaskService();
     const notificationService = getNotificationService();
     const task = taskService.createTask(
-      { title, description, category, assigned_to, suggested_duration, scheduled_date, scheduled_time, points: points || 0, bonus_items, overtime_penalty },
+      { title, description, category, assigned_to, suggested_duration, scheduled_date, scheduled_time, points: points || 0, bonus_items, overtime_penalty, repeat_type, repeat_config },
       req.user!.userId
     );
 

@@ -1,4 +1,12 @@
 export type TaskStatus = 'pending' | 'planned' | 'in_progress' | 'pending_review' | 'completed' | 'rejected' | 'overtime';
+export type RepeatType = 'none' | 'daily' | 'weekly' | 'monthly';
+
+export interface RepeatConfig {
+  endDate?: string;
+  daysOfWeek?: number[];
+  dayOfMonth?: number;
+  maxOccurrences?: number;
+}
 
 export interface Task {
   id: number;
@@ -18,6 +26,9 @@ export interface Task {
   actual_start_time?: string;
   actual_end_time?: string;
   overtime_minutes: number;
+  repeat_type: RepeatType;
+  repeat_config?: string;
+  parent_task_id?: number;
   created_at: string;
   updated_at: string;
 }
@@ -33,6 +44,8 @@ export interface CreateTaskData {
   points?: number;
   bonus_items?: string;
   overtime_penalty?: string;
+  repeat_type?: RepeatType;
+  repeat_config?: RepeatConfig;
 }
 
 export interface UpdateTaskData {

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTaskStore } from '../../stores';
-import type { CreateTaskData } from '../../types/task';
+import type { CreateTaskData, RepeatType, RepeatConfig } from '../../types/task';
 import type { TaskTemplate } from '../../types/template';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
@@ -11,6 +11,13 @@ interface TaskFormProps {
   assignedTo: number;
   template?: TaskTemplate;
 }
+
+const REPEAT_OPTIONS: { value: RepeatType; label: string }[] = [
+  { value: 'none', label: '不重复' },
+  { value: 'daily', label: '每天' },
+  { value: 'weekly', label: '每周' },
+  { value: 'monthly', label: '每月' },
+];
 
 export function TaskForm({ assignedTo, template }: TaskFormProps) {
   const navigate = useNavigate();
@@ -24,6 +31,8 @@ export function TaskForm({ assignedTo, template }: TaskFormProps) {
     scheduled_date: new Date().toISOString().split('T')[0],
     scheduled_time: '',
     points: template?.points?.toString() || '',
+    repeat_type: 'none' as RepeatType,
+    repeat_end_date: '',
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
@@ -45,6 +54,10 @@ export function TaskForm({ assignedTo, template }: TaskFormProps) {
 
     if (!validate()) return;
 
+    const repeatConfig: RepeatConfig | undefined = formData.repeat_type !== 'none' ? {
+      endDate: formData.repeat_end_date || undefined,
+    } : undefined;
+
     const data: CreateTaskData = {
       title: formData.title.trim(),
       description: formData.description.trim() || undefined,
@@ -54,6 +67,8 @@ export function TaskForm({ assignedTo, template }: TaskFormProps) {
       scheduled_date: formData.scheduled_date,
       scheduled_time: formData.scheduled_time || undefined,
       points: formData.points ? Number(formData.points) : 0,
+      repeat_type: formData.repeat_type,
+      repeat_config: repeatConfig,
     };
 
     try {
@@ -163,6 +178,42 @@ export function TaskForm({ assignedTo, template }: TaskFormProps) {
           onChange={handleChange}
           min={0}
         />
+      </div>
+
+      {/* Repeat Options */}
+      <div className="space-y-3 rounded-lg border p-4">
+        <h3 className="text-sm font-medium">重复设置</h3>
+
+        <div>
+          <label htmlFor="repeat_type" className="mb-1 block text-sm text-muted-foreground">
+            重复频率
+          </label>
+          <select
+            id="repeat_type"
+            name="repeat_type"
+            value={formData.repeat_type}
+            onChange={handleChange}
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
+            {REPEAT_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {formData.repeat_type !== 'none' && (
+          <Input
+            id="repeat_end_date"
+            name="repeat_end_date"
+            type="date"
+            label="结束日期（可选）"
+            value={formData.repeat_end_date}
+            onChange={handleChange}
+            min={formData.scheduled_date}
+          />
+        )}
       </div>
 
       {error && (

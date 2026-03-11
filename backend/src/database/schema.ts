@@ -33,10 +33,14 @@ export const createTables = `
     actual_start_time TIMESTAMP,
     actual_end_time TIMESTAMP,
     overtime_minutes INTEGER DEFAULT 0,
+    repeat_type VARCHAR(20) CHECK(repeat_type IN ('none', 'daily', 'weekly', 'monthly')),
+    repeat_config TEXT,
+    parent_task_id INTEGER,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (assigned_to) REFERENCES users(id),
-    FOREIGN KEY (created_by) REFERENCES users(id)
+    FOREIGN KEY (created_by) REFERENCES users(id),
+    FOREIGN KEY (parent_task_id) REFERENCES tasks(id)
   );
 
   -- Time logs table
