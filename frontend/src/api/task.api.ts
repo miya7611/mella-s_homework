@@ -36,4 +36,17 @@ export const taskApi = {
   deleteTask: async (id: number): Promise<void> => {
     await client.delete(`/api/tasks/${id}`);
   },
+
+  getPendingReviewTasks: async (): Promise<Task[]> => {
+    const response = await client.get<ApiResponse<Task[]>>('/api/tasks/pending-review');
+    return response.data.data;
+  },
+
+  reviewTask: async (id: number, approved: boolean, comment?: string): Promise<Task> => {
+    const response = await client.post<ApiResponse<Task>>(`/api/tasks/${id}/review`, {
+      approved,
+      comment,
+    });
+    return response.data.data;
+  },
 };

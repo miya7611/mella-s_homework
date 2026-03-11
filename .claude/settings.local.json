@@ -3,7 +3,16 @@
     "allow": [
       "Bash(git:*)",
       "Bash(npm install:*)",
-      "Bash(netstat:*)"
+      "Bash(netstat:*)",
+      "Bash(taskkill:*)",
+      "Bash(powershell:*)",
+      "Bash(curl -s http://localhost:3000/health)",
+      "Bash(netstat -ano | findstr :3000)",
+      "Bash(curl -s -X POST http://localhost:3000/api/auth/login -H \"Content-Type: application/json\" -d '{\"username\":\"parent\",\"password\":\"parent123\"}')",
+      "Bash(curl -s -X POST http://localhost:3000/api/auth/register -H \"Content-Type: application/json\" -d '{\"username\":\"testparent\",\"password\":\"test123\",\"role\":\"parent\"}')",
+      "Bash(curl -s http://localhost:5174 | head -20)",
+      "Read(//d/wm_item/Mella''''''''s homework/**)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

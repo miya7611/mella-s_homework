@@ -1,3 +1,5 @@
+export type TaskStatus = 'pending' | 'planned' | 'in_progress' | 'pending_review' | 'completed' | 'rejected' | 'overtime';
+
 export interface Task {
   id: number;
   title: string;
@@ -8,7 +10,8 @@ export interface Task {
   suggested_duration?: number;
   scheduled_date: string;
   scheduled_time?: string;
-  status: 'pending' | 'planned' | 'in_progress' | 'completed' | 'overtime';
+  status: TaskStatus;
+  review_comment?: string;
   points: number;
   bonus_items?: string;
   overtime_penalty?: string;
@@ -42,5 +45,6 @@ export interface UpdateTaskData {
   points?: number;
   bonus_items?: string;
   overtime_penalty?: string;
-  status?: 'pending' | 'planned' | 'in_progress' | 'completed' | 'overtime';
+  status?: TaskStatus;
+  review_comment?: string;
 }

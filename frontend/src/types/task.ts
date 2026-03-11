@@ -1,4 +1,4 @@
-export type TaskStatus = 'pending' | 'planned' | 'in_progress' | 'completed' | 'overtime';
+export type TaskStatus = 'pending' | 'planned' | 'in_progress' | 'pending_review' | 'completed' | 'rejected' | 'overtime';
 
 export interface Task {
   id: number;
@@ -11,6 +11,7 @@ export interface Task {
   scheduled_date: string;
   scheduled_time?: string;
   status: TaskStatus;
+  review_comment?: string;
   points: number;
   bonus_items?: string;
   overtime_penalty?: string;

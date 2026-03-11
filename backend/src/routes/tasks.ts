@@ -150,7 +150,8 @@ router.patch('/:id/status', authenticate, async (req: AuthRequest, res) => {
   try {
     const { status } = req.body;
 
-    if (!status || !['pending', 'planned', 'in_progress', 'completed', 'overtime'].includes(status)) {
+    const validStatuses = ['pending', 'planned', 'in_progress', 'pending_review', 'completed', 'rejected', 'overtime'];
+    if (!status || !validStatuses.includes(status)) {
       return res.status(400).json({
         success: false,
         error: { code: 'INVALID_STATUS', message: 'Valid status is required' }
@@ -178,12 +179,12 @@ router.patch('/:id/status', authenticate, async (req: AuthRequest, res) => {
 
     const updatedTask = taskService.updateTaskStatus(Number(req.params.id), status);
 
-    // Send notification to task creator when task is completed
-    if (status === 'completed' && task.created_by !== task.assigned_to) {
+    // Send notification to task creator when task is submitted for review
+    if (status === 'pending_review' && task.created_by !== task.assigned_to) {
       notificationService.createNotification(task.created_by, {
         type: 'task_completed',
-        title: '任务完成',
-        message: `任务「${task.title}」已完成`,
+        title: '任务待审核',
+        message: `任务「${task.title}」已完成，等待审核`,
         data: { taskId: task.id }
       });
     }
@@ -198,6 +199,89 @@ router.patch('/:id/status', authenticate, async (req: AuthRequest, res) => {
     res.status(500).json({
       success: false,
       error: { code: 'UPDATE_FAILED', message: error.message }
+    });
+  }
+});
+
+// Get pending review tasks (parent only)
+router.get('/pending-review', authenticate, requireParent, async (req: AuthRequest, res) => {
+  try {
+    const taskService = getTaskService();
+    const tasks = taskService.getPendingReviewTasks(req.user!.userId);
+
+    res.json({
+      success: true,
+      data: tasks
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: { code: 'FETCH_FAILED', message: error.message }
+    });
+  }
+});
+
+// Review task (parent only)
+router.post('/:id/review', authenticate, requireParent, async (req: AuthRequest, res) => {
+  try {
+    const { approved, comment } = req.body;
+
+    if (typeof approved !== 'boolean') {
+      return res.status(400).json({
+        success: false,
+        error: { code: 'INVALID_INPUT', message: 'approved (boolean) is required' }
+      });
+    }
+
+    const taskService = getTaskService();
+    const notificationService = getNotificationService();
+    const task = taskService.getTaskById(Number(req.params.id));
+
+    if (!task) {
+      return res.status(404).json({
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Task not found' }
+      });
+    }
+
+    // Only task creator can review
+    if (task.created_by !== req.user!.userId) {
+      return res.status(403).json({
+        success: false,
+        error: { code: 'FORBIDDEN', message: 'Only task creator can review this task' }
+      });
+    }
+
+    // Task must be pending_review
+    if (task.status !== 'pending_review') {
+      return res.status(400).json({
+        success: false,
+        error: { code: 'INVALID_STATUS', message: 'Task is not pending review' }
+      });
+    }
+
+    const updatedTask = taskService.reviewTask(Number(req.params.id), approved, comment);
+
+    // Send notification to assigned user
+    notificationService.createNotification(task.assigned_to, {
+      type: approved ? 'task_completed' : 'task_overdue',
+      title: approved ? '任务审核通过' : '任务审核未通过',
+      message: approved
+        ? `任务「${task.title}」已通过审核，获得 ${task.points} 积分！`
+        : `任务「${task.title}」未通过审核${comment ? `：${comment}` : ''}`,
+      data: { taskId: task.id }
+    });
+
+    saveDatabase();
+
+    res.json({
+      success: true,
+      data: updatedTask
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: { code: 'REVIEW_FAILED', message: error.message }
     });
   }
 });

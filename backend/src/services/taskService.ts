@@ -112,6 +112,10 @@ export class TaskService {
       updates.push('status = ?');
       values.push(data.status);
     }
+    if (data.review_comment !== undefined) {
+      updates.push('review_comment = ?');
+      values.push(data.review_comment);
+    }
 
     if (updates.length > 0) {
       updates.push('updated_at = CURRENT_TIMESTAMP');
@@ -133,6 +137,11 @@ export class TaskService {
         'UPDATE tasks SET status = ?, actual_start_time = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
         [status, now, id]
       );
+    } else if (status === 'pending_review') {
+      this.db.run(
+        'UPDATE tasks SET status = ?, actual_end_time = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+        [status, now, id]
+      );
     } else if (status === 'completed' || status === 'overtime') {
       this.db.run(
         'UPDATE tasks SET status = ?, actual_end_time = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
@@ -146,6 +155,29 @@ export class TaskService {
     }
 
     return this.getTaskById(id);
+  }
+
+  reviewTask(id: number, approved: boolean, comment?: string): Task | null {
+    const task = this.getTaskById(id);
+    if (!task) return null;
+
+    const status = approved ? 'completed' : 'rejected';
+
+    this.db.run(
+      'UPDATE tasks SET status = ?, review_comment = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+      [status, comment || null, id]
+    );
+
+    return this.getTaskById(id);
+  }
+
+  getPendingReviewTasks(createdBy: number): Task[] {
+    const result = this.db.exec(
+      `SELECT * FROM tasks WHERE created_by = ? AND status = 'pending_review' ORDER BY scheduled_date DESC`,
+      [createdBy]
+    );
+    if (result.length === 0) return [];
+    return result[0].values.map(row => this.rowToTask(row));
   }
 
   deleteTask(id: number): boolean {
@@ -168,14 +200,15 @@ export class TaskService {
       scheduled_date: row[7] as string,
       scheduled_time: row[8] as string | undefined,
       status: row[9] as Task['status'],
-      points: row[10] as number,
-      bonus_items: row[11] as string | undefined,
-      overtime_penalty: row[12] as string | undefined,
-      actual_start_time: row[13] as string | undefined,
-      actual_end_time: row[14] as string | undefined,
-      overtime_minutes: row[15] as number,
-      created_at: row[16] as string,
-      updated_at: row[17] as string
+      review_comment: row[10] as string | undefined,
+      points: row[11] as number,
+      bonus_items: row[12] as string | undefined,
+      overtime_penalty: row[13] as string | undefined,
+      actual_start_time: row[14] as string | undefined,
+      actual_end_time: row[15] as string | undefined,
+      overtime_minutes: row[16] as number,
+      created_at: row[17] as string,
+      updated_at: row[18] as string
     };
   }
 }

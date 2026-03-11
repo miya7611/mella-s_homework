@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Calendar, Clock, Trophy, Trash2, Timer as TimerIcon, MessageCircle, Send } from 'lucide-react';
+import { ArrowLeft, Calendar, Clock, Trophy, Trash2, Timer as TimerIcon, MessageCircle, Send, CheckCircle, XCircle } from 'lucide-react';
 import { useTaskStore, useAuthStore, useTimeStore } from '../stores';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card'
 import { Timer, TimeLogList } from '../components/time';
 import { TASK_STATUS, TASK_CATEGORIES } from '../lib/constants';
 import { commentsApi } from '../api/comments.api';
+import { taskApi } from '../api/task.api';
 import type { TaskStatus } from '../types/task';
 import type { TaskComment } from '../types/comment';
 
@@ -30,6 +31,8 @@ export function TaskDetailPage() {
   const [comments, setComments] = useState<TaskComment[]>([]);
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [reviewComment, setReviewComment] = useState('');
+  const [showReviewForm, setShowReviewForm] = useState(false);
 
   const fetchComments = async () => {
     if (!id) return;
@@ -136,6 +139,32 @@ export function TaskDetailPage() {
       setComments(comments.filter(c => c.id !== commentId));
     } catch (error) {
       console.error('Failed to delete comment:', error);
+    }
+  };
+
+  const handleSubmitForReview = async () => {
+    if (!currentTask) return;
+    setIsUpdating(true);
+    try {
+      await updateTaskStatus(currentTask.id, 'pending_review');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleReview = async (approved: boolean) => {
+    if (!currentTask) return;
+    setIsUpdating(true);
+    try {
+      await taskApi.reviewTask(currentTask.id, approved, reviewComment || undefined);
+      await fetchTaskById(currentTask.id);
+      setShowReviewForm(false);
+      setReviewComment('');
+    } catch (error) {
+      console.error('Failed to review task:', error);
+      alert('审核失败');
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -332,7 +361,7 @@ export function TaskDetailPage() {
       )}
 
       {/* Status Update (for assigned user) */}
-      {canUpdateStatus && currentTask.status !== 'completed' && (
+      {canUpdateStatus && !['completed', 'pending_review', 'rejected'].includes(currentTask.status) && (
         <Card className="mb-4">
           <CardHeader className="pb-2">
             <CardTitle className="text-base">更新状态</CardTitle>
@@ -340,7 +369,7 @@ export function TaskDetailPage() {
           <CardContent>
             <div className="grid grid-cols-2 gap-2">
               {Object.entries(TASK_STATUS)
-                .filter(([key]) => key !== currentTask.status)
+                .filter(([key]) => key !== currentTask.status && !['pending_review', 'completed', 'rejected'].includes(key))
                 .map(([value, { label, color }]) => (
                   <Button
                     key={value}
@@ -353,6 +382,119 @@ export function TaskDetailPage() {
                   </Button>
                 ))}
             </div>
+            {currentTask.status === 'in_progress' && (
+              <Button
+                className="w-full mt-3"
+                onClick={handleSubmitForReview}
+                disabled={isUpdating}
+              >
+                <CheckCircle className="h-4 w-4 mr-2" />
+                提交审核
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Pending Review Status */}
+      {currentTask.status === 'pending_review' && (
+        <Card className="mb-4 border-orange-200 bg-orange-50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 text-orange-600">
+              <Clock className="h-5 w-5" />
+              <span className="font-medium">等待家长审核</span>
+            </div>
+            <p className="text-sm text-muted-foreground mt-1">
+              任务已提交，请等待家长审核
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Rejected Status */}
+      {currentTask.status === 'rejected' && (
+        <Card className="mb-4 border-red-200 bg-red-50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 text-red-600">
+              <XCircle className="h-5 w-5" />
+              <span className="font-medium">审核未通过</span>
+            </div>
+            {currentTask.review_comment && (
+              <p className="text-sm text-muted-foreground mt-1">
+                原因：{currentTask.review_comment}
+              </p>
+            )}
+            <Button
+              className="w-full mt-3"
+              onClick={() => handleStatusChange('in_progress')}
+              disabled={isUpdating}
+            >
+              重新开始任务
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Review Section (for parent) */}
+      {isParent && currentTask.status === 'pending_review' && canEdit && (
+        <Card className="mb-4 border-green-200">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2">
+              <CheckCircle className="h-4 w-4 text-green-500" />
+              审核任务
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {!showReviewForm ? (
+              <div className="flex gap-2">
+                <Button
+                  className="flex-1"
+                  onClick={() => handleReview(true)}
+                  disabled={isUpdating}
+                >
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  通过
+                </Button>
+                <Button
+                  variant="destructive"
+                  className="flex-1"
+                  onClick={() => setShowReviewForm(true)}
+                  disabled={isUpdating}
+                >
+                  <XCircle className="h-4 w-4 mr-2" />
+                  驳回
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <textarea
+                  value={reviewComment}
+                  onChange={(e) => setReviewComment(e.target.value)}
+                  placeholder="请输入驳回原因..."
+                  className="w-full px-3 py-2 border rounded-md bg-background text-sm min-h-[80px]"
+                />
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => {
+                      setShowReviewForm(false);
+                      setReviewComment('');
+                    }}
+                  >
+                    取消
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    className="flex-1"
+                    onClick={() => handleReview(false)}
+                    disabled={isUpdating}
+                  >
+                    确认驳回
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
