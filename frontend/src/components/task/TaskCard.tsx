@@ -1,5 +1,6 @@
 import { Clock, Calendar, Trophy, Flag } from 'lucide-react';
 import type { Task, TaskStatus, Priority } from '../../types/task';
+import type { Tag } from '../../types/tag';
 import { Card, CardContent } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { TASK_STATUS, TASK_CATEGORIES } from '../../lib/constants';
@@ -13,11 +14,12 @@ const PRIORITY_CONFIG: Record<Priority, { label: string; color: string; bgColor:
 
 interface TaskCardProps {
   task: Task;
+  tags?: Tag[];
   onStatusChange?: (status: TaskStatus) => void;
   onClick?: () => void;
 }
 
-export function TaskCard({ task, onStatusChange, onClick }: TaskCardProps) {
+export function TaskCard({ task, tags = [], onStatusChange, onClick }: TaskCardProps) {
   const statusInfo = TASK_STATUS[task.status];
   const categoryInfo = TASK_CATEGORIES.find((c) => c.value === task.category);
   const priorityInfo = PRIORITY_CONFIG[task.priority || 'medium'];
@@ -49,6 +51,21 @@ export function TaskCard({ task, onStatusChange, onClick }: TaskCardProps) {
 
             {task.description && (
               <p className="text-sm text-muted-foreground line-clamp-2 mb-2">{task.description}</p>
+            )}
+
+            {/* Tags */}
+            {tags.length > 0 && (
+              <div className="flex flex-wrap gap-1 mb-2">
+                {tags.map(tag => (
+                  <span
+                    key={tag.id}
+                    className="px-2 py-0.5 rounded-full text-xs text-white"
+                    style={{ backgroundColor: tag.color }}
+                  >
+                    {tag.name}
+                  </span>
+                ))}
+              </div>
             )}
 
             <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">

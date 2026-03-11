@@ -162,6 +162,28 @@ export const createTables = `
     UNIQUE(user_id, badge_type)
   );
 
+  -- Tags table
+  CREATE TABLE IF NOT EXISTS tags (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name VARCHAR(50) NOT NULL,
+    color VARCHAR(20) DEFAULT '#6366f1',
+    created_by INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES users(id),
+    UNIQUE(name, created_by)
+  );
+
+  -- Task tags table (many-to-many relationship)
+  CREATE TABLE IF NOT EXISTS task_tags (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    task_id INTEGER NOT NULL,
+    tag_id INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (task_id) REFERENCES tasks(id) ON DELETE CASCADE,
+    FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE,
+    UNIQUE(task_id, tag_id)
+  );
+
   -- Create indexes
   CREATE INDEX IF NOT EXISTS idx_tasks_assigned_to ON tasks(assigned_to);
   CREATE INDEX IF NOT EXISTS idx_tasks_scheduled_date ON tasks(scheduled_date);
@@ -176,6 +198,9 @@ export const createTables = `
   CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
   CREATE INDEX IF NOT EXISTS idx_notifications_is_read ON notifications(is_read);
   CREATE INDEX IF NOT EXISTS idx_badges_user_id ON badges(user_id);
+  CREATE INDEX IF NOT EXISTS idx_tags_created_by ON tags(created_by);
+  CREATE INDEX IF NOT EXISTS idx_task_tags_task_id ON task_tags(task_id);
+  CREATE INDEX IF NOT EXISTS idx_task_tags_tag_id ON task_tags(tag_id);
 `;
 
 export function initializeSchema(db: any): void {

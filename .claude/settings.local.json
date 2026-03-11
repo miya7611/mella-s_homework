@@ -12,7 +12,11 @@
       "Bash(curl -s -X POST http://localhost:3000/api/auth/register -H \"Content-Type: application/json\" -d '{\"username\":\"testparent\",\"password\":\"test123\",\"role\":\"parent\"}')",
       "Bash(curl -s http://localhost:5174 | head -20)",
       "Read(//d/wm_item/Mella''''''''s homework/**)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(cd \"D:\\\\wm_item\\\\Mella's homework\\\\backend\" && npm run build 2>&1 | head -30)",
+      "Bash(cd \"D:\\\\wm_item\\\\Mella's homework\\\\frontend\" && npm run build 2>&1 | head -30)",
+      "Bash(cd \"D:\\\\wm_item\\\\Mella's homework\\\\frontend\" && npm run build 2>&1 | head -40)",
+      "Bash(cd \"D:\\\\wm_item\\\\Mella's homework\\\\frontend\" && npm run build 2>&1 | head -20)"
     ]
   }
 }

@@ -6,6 +6,8 @@ import type { TaskTemplate } from '../../types/template';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { TASK_CATEGORIES } from '../../lib/constants';
+import { TagSelector } from './TagSelector';
+import { tagsApi } from '../../api/tags.api';
 
 interface TaskFormProps {
   assignedTo: number;
@@ -42,6 +44,7 @@ export function TaskForm({ assignedTo, template }: TaskFormProps) {
     priority: 'medium' as Priority,
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
 
   const validate = () => {
     const errors: Record<string, string> = {};
@@ -80,7 +83,11 @@ export function TaskForm({ assignedTo, template }: TaskFormProps) {
     };
 
     try {
-      await createTask(data);
+      const task = await createTask(data);
+      // Set tags for the new task
+      if (task && selectedTagIds.length > 0) {
+        await tagsApi.setTaskTags(task.id, selectedTagIds);
+      }
       navigate('/tasks');
     } catch {
       // Error is handled by the store
@@ -207,6 +214,12 @@ export function TaskForm({ assignedTo, template }: TaskFormProps) {
           ))}
         </select>
       </div>
+
+      {/* Tag Selection */}
+      <TagSelector
+        selectedTagIds={selectedTagIds}
+        onChange={setSelectedTagIds}
+      />
 
       {/* Repeat Options */}
       <div className="space-y-3 rounded-lg border p-4">
