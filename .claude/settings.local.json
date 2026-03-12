@@ -16,7 +16,8 @@
       "Bash(cd \"D:\\\\wm_item\\\\Mella's homework\\\\backend\" && npm run build 2>&1 | head -30)",
       "Bash(cd \"D:\\\\wm_item\\\\Mella's homework\\\\frontend\" && npm run build 2>&1 | head -30)",
       "Bash(cd \"D:\\\\wm_item\\\\Mella's homework\\\\frontend\" && npm run build 2>&1 | head -40)",
-      "Bash(cd \"D:\\\\wm_item\\\\Mella's homework\\\\frontend\" && npm run build 2>&1 | head -20)"
+      "Bash(cd \"D:\\\\wm_item\\\\Mella's homework\\\\frontend\" && npm run build 2>&1 | head -20)",
+      "Bash(cd \"D:\\\\wm_item\\\\Mella's homework\\\\backend\" && npm run build 2>&1 | head -20)"
     ]
   }
 }

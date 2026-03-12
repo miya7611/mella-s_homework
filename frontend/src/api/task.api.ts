@@ -65,4 +65,30 @@ export const taskApi = {
     const response = await client.get<ApiResponse<Task[]>>('/api/tasks/due-today');
     return response.data.data;
   },
+
+  searchTasks: async (params: {
+    q?: string;
+    status?: string[];
+    priority?: string[];
+    category?: string[];
+    dateFrom?: string;
+    dateTo?: string;
+    userId?: number;
+    createdBy?: number;
+  }): Promise<{ tasks: Task[]; count: number }> => {
+    const searchParams = new URLSearchParams();
+    if (params.q) searchParams.append('q', params.q);
+    if (params.status?.length) searchParams.append('status', params.status.join(','));
+    if (params.priority?.length) searchParams.append('priority', params.priority.join(','));
+    if (params.category?.length) searchParams.append('category', params.category.join(','));
+    if (params.dateFrom) searchParams.append('dateFrom', params.dateFrom);
+    if (params.dateTo) searchParams.append('dateTo', params.dateTo);
+    if (params.userId) searchParams.append('userId', String(params.userId));
+    if (params.createdBy) searchParams.append('createdBy', String(params.createdBy));
+
+    const response = await client.get<ApiResponse<Task[]> & { count: number }>(
+      `/api/tasks/search?${searchParams.toString()}`
+    );
+    return { tasks: response.data.data, count: response.data.count };
+  },
 };

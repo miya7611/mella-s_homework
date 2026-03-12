@@ -237,6 +237,78 @@ export class TaskService {
     return result[0].values.map(row => this.rowToTask(row));
   }
 
+  // Search tasks with filters
+  searchTasks(params: {
+    userId?: number;
+    query?: string;
+    status?: string[];
+    priority?: string[];
+    category?: string[];
+    dateFrom?: string;
+    dateTo?: string;
+    createdBy?: number;
+  }): Task[] {
+    const conditions: string[] = [];
+    const values: any[] = [];
+
+    // User filter (assigned_to or created_by)
+    if (params.userId) {
+      conditions.push('(assigned_to = ? OR created_by = ?)');
+      values.push(params.userId, params.userId);
+    }
+
+    // Text search in title and description
+    if (params.query && params.query.trim()) {
+      conditions.push('(title LIKE ? OR description LIKE ?)');
+      const searchTerm = `%${params.query.trim()}%`;
+      values.push(searchTerm, searchTerm);
+    }
+
+    // Status filter
+    if (params.status && params.status.length > 0) {
+      const placeholders = params.status.map(() => '?').join(', ');
+      conditions.push(`status IN (${placeholders})`);
+      values.push(...params.status);
+    }
+
+    // Priority filter
+    if (params.priority && params.priority.length > 0) {
+      const placeholders = params.priority.map(() => '?').join(', ');
+      conditions.push(`priority IN (${placeholders})`);
+      values.push(...params.priority);
+    }
+
+    // Category filter
+    if (params.category && params.category.length > 0) {
+      const placeholders = params.category.map(() => '?').join(', ');
+      conditions.push(`category IN (${placeholders})`);
+      values.push(...params.category);
+    }
+
+    // Date range filter
+    if (params.dateFrom) {
+      conditions.push('scheduled_date >= ?');
+      values.push(params.dateFrom);
+    }
+    if (params.dateTo) {
+      conditions.push('scheduled_date <= ?');
+      values.push(params.dateTo);
+    }
+
+    // Created by filter
+    if (params.createdBy) {
+      conditions.push('created_by = ?');
+      values.push(params.createdBy);
+    }
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+    const sql = `SELECT * FROM tasks ${whereClause} ORDER BY scheduled_date DESC, scheduled_time DESC`;
+
+    const result = this.db.exec(sql, values);
+    if (result.length === 0) return [];
+    return result[0].values.map(row => this.rowToTask(row));
+  }
+
   deleteTask(id: number): boolean {
     const task = this.getTaskById(id);
     if (!task) return false;

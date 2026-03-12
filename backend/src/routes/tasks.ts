@@ -139,6 +139,45 @@ router.get('/due-today', authenticate, async (req: AuthRequest, res) => {
   }
 });
 
+// Search tasks with filters
+router.get('/search', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const taskService = getTaskService();
+    const {
+      q,           // Search query
+      status,      // Comma-separated status values
+      priority,    // Comma-separated priority values
+      category,    // Comma-separated category values
+      dateFrom,    // Start date
+      dateTo,      // End date
+      userId,      // Filter by user
+      createdBy,   // Filter by creator
+    } = req.query;
+
+    const tasks = taskService.searchTasks({
+      userId: userId ? Number(userId) : req.user!.userId,
+      query: q as string,
+      status: status ? (status as string).split(',') : undefined,
+      priority: priority ? (priority as string).split(',') : undefined,
+      category: category ? (category as string).split(',') : undefined,
+      dateFrom: dateFrom as string,
+      dateTo: dateTo as string,
+      createdBy: createdBy ? Number(createdBy) : undefined,
+    });
+
+    res.json({
+      success: true,
+      data: tasks,
+      count: tasks.length
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: { code: 'SEARCH_FAILED', message: error.message }
+    });
+  }
+});
+
 // Get task by ID
 router.get('/:id', authenticate, async (req: AuthRequest, res) => {
   try {
