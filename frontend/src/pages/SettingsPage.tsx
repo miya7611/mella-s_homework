@@ -4,6 +4,7 @@ import { useAuthStore } from '../stores';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card, CardContent } from '../components/ui/Card';
+import { ThemeToggle } from '../components/ui/ThemeToggle';
 import { User, Lock, LogOut, ChevronRight, LayoutTemplate, Download, FileJson, FileSpreadsheet } from 'lucide-react';
 import { exportApi } from '../api/export.api';
 
@@ -250,6 +251,15 @@ export function SettingsPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Theme Settings */}
+      <Card className="mt-4">
+        <CardContent className="p-4">
+          <h4 className="font-medium mb-3">主题设置</h4>
+          <p className="text-sm text-muted-foreground mb-3">选择您喜欢的界面主题</p>
+          <ThemeToggle className="w-full justify-center" />
+        </CardContent>
+      </Card>
 
       {/* Parent Tools */}
       {user.role === 'parent' && (
