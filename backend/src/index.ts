@@ -15,6 +15,7 @@ import notificationsRoutes from './routes/notifications';
 import badgesRoutes from './routes/badges';
 import tagsRoutes from './routes/tags';
 import attachmentsRoutes from './routes/attachments';
+import exportRoutes from './routes/export';
 
 dotenv.config();
 
@@ -42,6 +43,7 @@ app.use('/api/notifications', notificationsRoutes);
 app.use('/api/badges', badgesRoutes);
 app.use('/api/tags', tagsRoutes);
 app.use('/api/tasks/:taskId/attachments', attachmentsRoutes);
+app.use('/api/export', exportRoutes);
 
 // Protected test routes
 app.get('/api/me', authenticate, (req: AuthRequest, res) => {

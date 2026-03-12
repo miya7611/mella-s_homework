@@ -4,7 +4,8 @@ import { useAuthStore } from '../stores';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card, CardContent } from '../components/ui/Card';
-import { User, Lock, LogOut, ChevronRight, LayoutTemplate } from 'lucide-react';
+import { User, Lock, LogOut, ChevronRight, LayoutTemplate, Download, FileJson, FileSpreadsheet } from 'lucide-react';
+import { exportApi } from '../api/export.api';
 
 const AVATARS = ['🐶', '🐱', '🐼', '🦊', '🦁', '🐸', '🐵', '🐰', '🐻', '🐨'];
 
@@ -22,6 +23,7 @@ export function SettingsPage() {
   });
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   const handleAvatarSelect = async (avatar: string) => {
     setSelectedAvatar(avatar);
@@ -73,6 +75,39 @@ export function SettingsPage() {
   const handleLogout = () => {
     logout();
     navigate('/login');
+  };
+
+  const handleExportJSON = async () => {
+    setIsExporting(true);
+    try {
+      await exportApi.exportJSON();
+    } catch (error) {
+      console.error('Export failed:', error);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleExportTasksCSV = async () => {
+    setIsExporting(true);
+    try {
+      await exportApi.exportTasksCSV();
+    } catch (error) {
+      console.error('Export failed:', error);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleExportTimeLogsCSV = async () => {
+    setIsExporting(true);
+    try {
+      await exportApi.exportTimeLogsCSV();
+    } catch (error) {
+      console.error('Export failed:', error);
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   if (!user) return null;
@@ -236,6 +271,44 @@ export function SettingsPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Data Export */}
+      <Card className="mt-4">
+        <CardContent className="p-0">
+          <div className="p-3 border-b">
+            <h4 className="text-sm font-medium text-muted-foreground">数据导出</h4>
+          </div>
+          <div className="p-4 space-y-3">
+            <Button
+              variant="outline"
+              className="w-full justify-start"
+              onClick={handleExportJSON}
+              disabled={isExporting}
+            >
+              <FileJson className="h-5 w-5 mr-3" />
+              导出全部数据 (JSON)
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-start"
+              onClick={handleExportTasksCSV}
+              disabled={isExporting}
+            >
+              <FileSpreadsheet className="h-5 w-5 mr-3" />
+              导出任务列表 (CSV)
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full justify-start"
+              onClick={handleExportTimeLogsCSV}
+              disabled={isExporting}
+            >
+              <Download className="h-5 w-5 mr-3" />
+              导出时间记录 (CSV)
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Logout Button */}
       <Card className="mt-4">
