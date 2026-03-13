@@ -1,7 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Play, Square, Clock } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Card, CardContent } from '../ui/Card';
+import { soundService } from '../../services/soundService';
+import { useSoundSettingsStore } from '../../stores/soundSettingsStore';
 
 interface TimerProps {
   isRunning: boolean;
@@ -19,6 +21,9 @@ export function Timer({
   onStop,
 }: TimerProps) {
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const { settings } = useSoundSettingsStore();
+  const hasPlayedCompleteSound = useRef(false);
+  const hasPlayedTimeoutSound = useRef(false);
 
   useEffect(() => {
     let interval: ReturnType<typeof setInterval> | null = null;
@@ -31,6 +36,8 @@ export function Timer({
       }, 1000);
     } else {
       setElapsedSeconds(0);
+      hasPlayedCompleteSound.current = false;
+      hasPlayedTimeoutSound.current = false;
     }
 
     return () => {
@@ -51,6 +58,47 @@ export function Timer({
 
   const suggestedSeconds = (suggestedDuration || 0) * 60;
   const isOvertime = suggestedSeconds > 0 && elapsedSeconds > suggestedSeconds;
+
+  // Play sounds at appropriate times
+  useEffect(() => {
+    if (!isRunning || !settings.enabled) return;
+
+    // Play complete sound when reaching suggested duration
+    if (suggestedSeconds > 0 && elapsedSeconds >= suggestedSeconds && elapsedSeconds < suggestedSeconds + 5) {
+      if (!hasPlayedCompleteSound.current && settings.completeSound) {
+        soundService.play('complete');
+        hasPlayedCompleteSound.current = true;
+      }
+    }
+
+    // Play timeout sound when going overtime (first 5 seconds of overtime)
+    if (isOvertime && elapsedSeconds >= suggestedSeconds + 5 && elapsedSeconds < suggestedSeconds + 10) {
+      if (!hasPlayedTimeoutSound.current && settings.timeoutSound) {
+        soundService.play('timeout');
+        hasPlayedTimeoutSound.current = true;
+      }
+    }
+
+    // Play tick sound every second if enabled
+    if (settings.tickSound && elapsedSeconds > 0) {
+      soundService.play('tick');
+    }
+  }, [isRunning, elapsedSeconds, suggestedSeconds, isOvertime, settings]);
+
+  const handleStart = () => {
+    soundService.resume();
+    if (settings.enabled && settings.startSound) {
+      soundService.play('start');
+    }
+    onStart();
+  };
+
+  const handleStop = () => {
+    if (settings.enabled && settings.completeSound) {
+      soundService.play('complete');
+    }
+    onStop();
+  };
 
   return (
     <Card className={isOvertime ? 'border-destructive' : ''}>
@@ -92,7 +140,7 @@ export function Timer({
           </div>
 
           <Button
-            onClick={isRunning ? onStop : onStart}
+            onClick={isRunning ? handleStop : handleStart}
             variant={isRunning ? 'destructive' : 'default'}
             size="sm"
           >

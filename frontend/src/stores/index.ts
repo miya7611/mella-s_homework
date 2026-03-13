@@ -5,4 +5,5 @@ export { useRewardStore } from './rewardStore';
 export { useTimeStore } from './timeStore';
 export { useNotificationStore } from './notificationStore';
 export { useNotificationSettingsStore } from './notificationSettingsStore';
+export { useSoundSettingsStore } from './soundSettingsStore';
 export { useThemeStore } from './themeStore';
