@@ -317,6 +317,51 @@ export class TaskService {
     return true;
   }
 
+  // Subtask methods
+  getSubtasks(parentTaskId: number): Task[] {
+    const result = this.db.exec(
+      'SELECT * FROM tasks WHERE parent_task_id = ? ORDER BY created_at ASC',
+      [parentTaskId]
+    );
+    if (result.length === 0) return [];
+    return result[0].values.map(row => this.rowToTask(row));
+  }
+
+  createSubtask(parentTaskId: number, data: CreateTaskData, createdBy: number): Task | null {
+    const parentTask = this.getTaskById(parentTaskId);
+    if (!parentTask) return null;
+
+    const task = this.createTask({
+      ...data,
+      assigned_to: data.assigned_to || parentTask.assigned_to,
+      scheduled_date: data.scheduled_date || parentTask.scheduled_date,
+    }, createdBy);
+
+    // Set parent task id
+    this.db.run(
+      'UPDATE tasks SET parent_task_id = ? WHERE id = ?',
+      [parentTaskId, task.id]
+    );
+
+    return this.getTaskById(task.id);
+  }
+
+  updateSubtaskStatus(subtaskId: number, status: Task['status']): Task | null {
+    return this.updateTaskStatus(subtaskId, status);
+  }
+
+  deleteSubtask(subtaskId: number): boolean {
+    return this.deleteTask(subtaskId);
+  }
+
+  getSubtaskProgress(parentTaskId: number): { total: number; completed: number; percentage: number } {
+    const subtasks = this.getSubtasks(parentTaskId);
+    const total = subtasks.length;
+    const completed = subtasks.filter(t => t.status === 'completed').length;
+    const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+    return { total, completed, percentage };
+  }
+
   createRecurringTask(taskId: number): Task | null {
     const task = this.getTaskById(taskId);
     if (!task || task.repeat_type === 'none') return null;

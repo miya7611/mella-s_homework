@@ -7,11 +7,12 @@ import { Badge } from '../components/ui/Badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Timer, TimeLogList } from '../components/time';
 import { FileUpload } from '../components/task/FileUpload';
+import { SubtaskList } from '../components/task/SubtaskList';
 import { TASK_STATUS, TASK_CATEGORIES } from '../lib/constants';
 import { commentsApi } from '../api/comments.api';
 import { attachmentsApi } from '../api/attachments.api';
 import { taskApi } from '../api/task.api';
-import type { TaskStatus } from '../types/task';
+import type { Task, TaskStatus } from '../types/task';
 import type { TaskComment } from '../types/comment';
 import type { Attachment } from '../types/attachment';
 
@@ -37,6 +38,8 @@ export function TaskDetailPage() {
   const [reviewComment, setReviewComment] = useState('');
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [attachments, setAttachments] = useState<Omit<Attachment, 'content'>[]>([]);
+  const [subtasks, setSubtasks] = useState<Task[]>([]);
+  const [subtaskProgress, setSubtaskProgress] = useState({ total: 0, completed: 0, percentage: 0 });
 
   const fetchComments = async () => {
     if (!id) return;
@@ -58,12 +61,45 @@ export function TaskDetailPage() {
     }
   };
 
+  const fetchSubtasks = async () => {
+    if (!id) return;
+    try {
+      const data = await taskApi.getSubtasks(Number(id));
+      setSubtasks(data.subtasks);
+      setSubtaskProgress(data.progress);
+    } catch (error) {
+      console.error('Failed to fetch subtasks:', error);
+    }
+  };
+
+  const handleAddSubtask = async (title: string) => {
+    if (!id || !currentTask) return;
+    await taskApi.createSubtask(Number(id), {
+      title,
+      scheduled_date: currentTask.scheduled_date,
+      assigned_to: currentTask.assigned_to,
+    });
+    await fetchSubtasks();
+  };
+
+  const handleDeleteSubtask = async (subtaskId: number) => {
+    if (!id) return;
+    await taskApi.deleteSubtask(Number(id), subtaskId);
+    await fetchSubtasks();
+  };
+
+  const handleToggleSubtask = async (subtaskId: number, status: TaskStatus) => {
+    await taskApi.updateTaskStatus(subtaskId, status);
+    await fetchSubtasks();
+  };
+
   useEffect(() => {
     if (id) {
       fetchTaskById(Number(id));
       fetchTimeLogsByTask(Number(id));
       fetchComments();
       fetchAttachments();
+      fetchSubtasks();
     }
     return () => {
       clearCurrentTask();
@@ -382,6 +418,21 @@ export function TaskDetailPage() {
             taskId={Number(id)}
             attachments={attachments}
             onAttachmentsChange={fetchAttachments}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Subtasks */}
+      <Card className="mb-4">
+        <CardContent className="p-4">
+          <SubtaskList
+            subtasks={subtasks}
+            progress={subtaskProgress}
+            onAddSubtask={handleAddSubtask}
+            onDeleteSubtask={handleDeleteSubtask}
+            onToggleSubtask={handleToggleSubtask}
+            onSubtaskClick={(subtask) => navigate(`/tasks/${subtask.id}`)}
+            canEdit={canEdit}
           />
         </CardContent>
       </Card>

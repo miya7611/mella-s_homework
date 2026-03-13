@@ -407,4 +407,127 @@ router.delete('/:id', authenticate, requireParent, async (req: AuthRequest, res)
   }
 });
 
+// Get subtasks for a task
+router.get('/:id/subtasks', authenticate, async (req: AuthRequest, res) => {
+  try {
+    const taskService = getTaskService();
+    const taskId = Number(req.params.id);
+    const task = taskService.getTaskById(taskId);
+
+    if (!task) {
+      return res.status(404).json({
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Task not found' }
+      });
+    }
+
+    const subtasks = taskService.getSubtasks(taskId);
+    const progress = taskService.getSubtaskProgress(taskId);
+
+    res.json({
+      success: true,
+      data: {
+        subtasks,
+        progress
+      }
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: { code: 'FETCH_FAILED', message: error.message }
+    });
+  }
+});
+
+// Create a subtask
+router.post('/:id/subtasks', authenticate, requireParent, async (req: AuthRequest, res) => {
+  try {
+    const { title, description, points, scheduled_date, assigned_to } = req.body;
+    const taskId = Number(req.params.id);
+
+    if (!title || !title.trim()) {
+      return res.status(400).json({
+        success: false,
+        error: { code: 'INVALID_INPUT', message: '子任务标题不能为空' }
+      });
+    }
+
+    const taskService = getTaskService();
+    const parentTask = taskService.getTaskById(taskId);
+
+    if (!parentTask) {
+      return res.status(404).json({
+        success: false,
+        error: { code: 'NOT_FOUND', message: '父任务不存在' }
+      });
+    }
+
+    const subtask = taskService.createSubtask(taskId, {
+      title: title.trim(),
+      description: description?.trim() || undefined,
+      category: parentTask.category,
+      assigned_to: assigned_to || parentTask.assigned_to,
+      scheduled_date: scheduled_date || parentTask.scheduled_date,
+      points: points || 0,
+    }, req.user!.userId);
+
+    if (!subtask) {
+      return res.status(400).json({
+        success: false,
+        error: { code: 'CREATE_FAILED', message: '子任务创建失败' }
+      });
+    }
+
+    saveDatabase();
+
+    res.status(201).json({
+      success: true,
+      data: subtask
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: { code: 'CREATE_FAILED', message: error.message }
+    });
+  }
+});
+
+// Delete a subtask
+router.delete('/:id/subtasks/:subtaskId', authenticate, requireParent, async (req: AuthRequest, res) => {
+  try {
+    const taskService = getTaskService();
+    const subtaskId = Number(req.params.subtaskId);
+    const parentTaskId = Number(req.params.id);
+
+    // Verify the subtask belongs to this parent task
+    const subtask = taskService.getTaskById(subtaskId);
+    if (!subtask || subtask.parent_task_id !== parentTaskId) {
+      return res.status(404).json({
+        success: false,
+        error: { code: 'NOT_FOUND', message: '子任务不存在' }
+      });
+    }
+
+    const deleted = taskService.deleteSubtask(subtaskId);
+    if (!deleted) {
+      return res.status(400).json({
+        success: false,
+        error: { code: 'DELETE_FAILED', message: '删除失败' }
+      });
+    }
+
+    saveDatabase();
+
+    res.json({
+      success: true,
+      message: '子任务已删除'
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      error: { code: 'DELETE_FAILED', message: error.message }
+    });
+  }
+});
+
 export default router;

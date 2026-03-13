@@ -91,4 +91,30 @@ export const taskApi = {
     );
     return { tasks: response.data.data, count: response.data.count };
   },
+
+  // Subtask APIs
+  getSubtasks: async (taskId: number): Promise<{ subtasks: Task[]; progress: { total: number; completed: number; percentage: number } }> => {
+    const response = await client.get<ApiResponse<{ subtasks: Task[]; progress: { total: number; completed: number; percentage: number } }>>(
+      `/api/tasks/${taskId}/subtasks`
+    );
+    return response.data.data;
+  },
+
+  createSubtask: async (taskId: number, data: {
+    title: string;
+    description?: string;
+    points?: number;
+    scheduled_date?: string;
+    assigned_to?: number;
+  }): Promise<Task> => {
+    const response = await client.post<ApiResponse<Task>>(
+      `/api/tasks/${taskId}/subtasks`,
+      data
+    );
+    return response.data.data;
+  },
+
+  deleteSubtask: async (taskId: number, subtaskId: number): Promise<void> => {
+    await client.delete(`/api/tasks/${taskId}/subtasks/${subtaskId}`);
+  },
 };
