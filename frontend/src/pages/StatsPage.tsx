@@ -1,10 +1,23 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Trophy, Clock, TrendingUp, TrendingDown } from 'lucide-react';
+import {
+  PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  AreaChart, Area, Legend
+} from 'recharts';
 import { useAuthStore } from '../stores';
 import { Card, CardContent } from '../components/ui/Card';
 import { statsApi } from '../api/stats.api';
 import type { UserStats, DailyStats } from '../types/stats';
+
+// Chart colors
+const COLORS = {
+  completed: '#22c55e',
+  pending: '#eab308',
+  in_progress: '#3b82f6',
+  overtime: '#ef4444',
+  rejected: '#6b7280',
+};
 
 // 计算本周一至今的天数
 const getDaysThisWeek = () => {
@@ -60,11 +73,31 @@ export function StatsPage() {
     return mins > 0 ? `${hours}小时${mins}分钟` : `${hours}小时`;
   };
 
-  const maxPoints = Math.max(...chartData.map((d) => d.points_earned), 1);
-
   useEffect(() => {
     fetchUserStats(days);
   }, [days]);
+
+  // Prepare pie chart data for task status distribution
+  const pieData = stats?.task_stats ? [
+    { name: '已完成', value: stats.task_stats.completed, color: COLORS.completed },
+    { name: '待处理', value: stats.task_stats.pending, color: COLORS.pending },
+    { name: '进行中', value: stats.task_stats.in_progress, color: COLORS.in_progress },
+    { name: '超时', value: stats.task_stats.overtime, color: COLORS.overtime },
+  ].filter(item => item.value > 0) : [];
+
+  // Prepare bar chart data for daily tasks
+  const barData = chartData.map(day => ({
+    date: formatDate(day.date),
+    tasks: day.tasks_completed,
+    points: day.points_earned,
+  }));
+
+  // Prepare area chart data for points trend
+  const areaData = chartData.map(day => ({
+    date: formatDate(day.date),
+    积分: day.points_earned,
+    时长: Math.round(day.time_spent / 60 * 10) / 10, // Convert to hours with 1 decimal
+  }));
 
   if (isLoading) {
     return (
@@ -175,69 +208,162 @@ export function StatsPage() {
         </Card>
       </div>
 
-      {/* Task Stats */}
-      {stats?.task_stats && (
+      {/* Task Status Distribution - Pie Chart */}
+      {stats?.task_stats && pieData.length > 0 && (
         <Card>
           <CardContent className="p-4">
-            <h3 className="font-medium mb-3">任务统计</h3>
-            <div className="grid grid-cols-5 gap-3 text-center">
-              <div>
-                <p className="text-2xl font-bold">{stats.task_stats.total}</p>
-                <p className="text-sm text-muted-foreground">总任务</p>
+            <h3 className="font-medium mb-3">任务状态分布</h3>
+            <div className="flex items-center gap-4">
+              <div className="w-32 h-32">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={25}
+                      outerRadius={45}
+                      paddingAngle={2}
+                      dataKey="value"
+                    >
+                      {pieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
-              <div>
-                <p className="text-2xl font-bold text-green-500">{stats.task_stats.completed}</p>
-                <p className="text-sm text-muted-foreground">已完成</p>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-yellow-500">{stats.task_stats.pending}</p>
-                <p className="text-sm text-muted-foreground">待处理</p>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-blue-500">{stats.task_stats.in_progress}</p>
-                <p className="text-sm text-muted-foreground">进行中</p>
-              </div>
-              <div>
-                <p className="text-2xl font-bold text-red-500">{stats.task_stats.overtime}</p>
-                <p className="text-sm text-muted-foreground">超时</p>
+              <div className="flex-1 space-y-2">
+                {pieData.map((item, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <div
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: item.color }}
+                    />
+                    <span className="text-sm text-muted-foreground">{item.name}</span>
+                    <span className="text-sm font-medium ml-auto">{item.value}</span>
+                  </div>
+                ))}
+                <div className="flex items-center gap-2 pt-1 border-t">
+                  <span className="text-sm text-muted-foreground">总计</span>
+                  <span className="text-sm font-medium ml-auto">{stats.task_stats.total}</span>
+                </div>
               </div>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Daily Stats Chart */}
+      {/* Daily Tasks Bar Chart */}
+      {barData.length > 0 && (
+        <Card>
+          <CardContent className="p-4">
+            <h3 className="font-medium mb-3">每日完成任务</h3>
+            <div className="h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={barData}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis
+                    dataKey="date"
+                    tick={{ fontSize: 12 }}
+                    className="text-muted-foreground"
+                  />
+                  <YAxis
+                    tick={{ fontSize: 12 }}
+                    className="text-muted-foreground"
+                    allowDecimals={false}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--background))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px',
+                    }}
+                  />
+                  <Bar
+                    dataKey="tasks"
+                    fill="#3b82f6"
+                    radius={[4, 4, 0, 0]}
+                    name="完成任务"
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Points Trend Area Chart */}
+      {areaData.length > 0 && (
+        <Card>
+          <CardContent className="p-4">
+            <h3 className="font-medium mb-3">积分趋势</h3>
+            <div className="h-48">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={areaData}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis
+                    dataKey="date"
+                    tick={{ fontSize: 12 }}
+                    className="text-muted-foreground"
+                  />
+                  <YAxis
+                    tick={{ fontSize: 12 }}
+                    className="text-muted-foreground"
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--background))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px',
+                    }}
+                  />
+                  <Legend />
+                  <Area
+                    type="monotone"
+                    dataKey="积分"
+                    stroke="#22c55e"
+                    fill="#22c55e"
+                    fillOpacity={0.3}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Daily Stats Detail List */}
       <Card>
         <CardContent className="p-4">
-          <h3 className="font-medium mb-3">每日统计</h3>
+          <h3 className="font-medium mb-3">每日详情</h3>
           {chartData.length === 0 ? (
             <p className="text-muted-foreground text-center py-4">暂无数据</p>
           ) : (
             <div className="space-y-3">
-              {chartData.map((day) => {
-            const percentage = (day.points_earned / maxPoints) * 100;
-            return (
-              <div key={day.date} className="flex items-end gap-2">
-                <div className="flex-1">
-                  <p className="text-xs text-muted-foreground">{formatDate(day.date)}</p>
-                  <p className="text-sm font-medium">{day.tasks_completed} 任务</p>
+              {chartData.map((day) => (
+                <div key={day.date} className="flex items-center gap-3 p-2 rounded-lg hover:bg-accent/50">
+                  <div className="w-16">
+                    <p className="text-sm font-medium">{formatDate(day.date)}</p>
+                  </div>
+                  <div className="flex-1 grid grid-cols-3 gap-2 text-center">
+                    <div>
+                      <p className="text-lg font-bold text-blue-500">{day.tasks_completed}</p>
+                      <p className="text-xs text-muted-foreground">任务</p>
+                    </div>
+                    <div>
+                      <p className="text-lg font-bold text-green-500">+{day.points_earned}</p>
+                      <p className="text-xs text-muted-foreground">积分</p>
+                    </div>
+                    <div>
+                      <p className="text-lg font-bold text-purple-500">{formatDuration(day.time_spent)}</p>
+                      <p className="text-xs text-muted-foreground">时长</p>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex-1 text-right">
-                  <p className="text-green-500 font-semibold">+{day.points_earned} 积分</p>
-                </div>
-                <div className="flex-1 text-right">
-                  <p className="text-blue-500 font-semibold">{formatDuration(day.time_spent)}</p>
-                </div>
-                <div className="h-2 bg-muted rounded mt-1">
-                  <div
-                    className="h-full bg-green-500 rounded transition-all"
-                    style={{ width: `${percentage}%` }}
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
+              ))}
+            </div>
           )}
         </CardContent>
       </Card>
