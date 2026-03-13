@@ -5,7 +5,7 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card, CardContent } from '../components/ui/Card';
 import { ThemeToggle } from '../components/ui/ThemeToggle';
-import { User, Lock, LogOut, ChevronRight, LayoutTemplate, Download, FileJson, FileSpreadsheet, Bell, Volume2 } from 'lucide-react';
+import { User, Lock, LogOut, ChevronRight, LayoutTemplate, Download, FileJson, FileSpreadsheet, Bell, Volume2, Printer } from 'lucide-react';
 import { exportApi } from '../api/export.api';
 
 const AVATARS = ['🐶', '🐱', '🐼', '🦊', '🦁', '🐸', '🐵', '🐰', '🐻', '🐨'];
@@ -292,6 +292,25 @@ export function SettingsPage() {
               <div className="text-left">
                 <span>声音设置</span>
                 <p className="text-xs text-muted-foreground">配置计时音效提醒</p>
+              </div>
+            </div>
+            <ChevronRight className="h-5 w-5 text-muted-foreground" />
+          </button>
+        </CardContent>
+      </Card>
+
+      {/* Print & Export */}
+      <Card className="mt-4">
+        <CardContent className="p-0">
+          <button
+            onClick={() => navigate('/print')}
+            className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors rounded-lg"
+          >
+            <div className="flex items-center gap-3">
+              <Printer className="h-5 w-5" />
+              <div className="text-left">
+                <span>打印与导出</span>
+                <p className="text-xs text-muted-foreground">导出周报告PDF</p>
               </div>
             </div>
             <ChevronRight className="h-5 w-5 text-muted-foreground" />

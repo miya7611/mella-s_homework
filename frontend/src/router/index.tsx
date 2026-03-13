@@ -19,6 +19,7 @@ import { CalendarPage } from '../pages/CalendarPage';
 import { BadgesPage } from '../pages/BadgesPage';
 import { NotificationSettingsPage } from '../pages/NotificationSettingsPage';
 import { SoundSettingsPage } from '../pages/SoundSettingsPage';
+import { PrintPage } from '../pages/PrintPage';
 import { AppLayout } from '../components/layout/AppLayout';
 
 export const router = createBrowserRouter([
@@ -133,6 +134,10 @@ export const router = createBrowserRouter([
       {
         path: 'sound/settings',
         element: <SoundSettingsPage />,
+      },
+      {
+        path: 'print',
+        element: <PrintPage />,
       },
     ],
   },
