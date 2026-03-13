@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTaskStore } from '../../stores';
 import type { CreateTaskData, RepeatType, RepeatConfig, Priority } from '../../types/task';
@@ -12,6 +12,8 @@ import { tagsApi } from '../../api/tags.api';
 interface TaskFormProps {
   assignedTo: number;
   template?: TaskTemplate;
+  initialTitle?: string;
+  initialDescription?: string;
 }
 
 const REPEAT_OPTIONS: { value: RepeatType; label: string }[] = [
@@ -27,13 +29,13 @@ const PRIORITY_OPTIONS: { value: Priority; label: string; color: string }[] = [
   { value: 'high', label: '高优先级', color: 'text-red-600' },
 ];
 
-export function TaskForm({ assignedTo, template }: TaskFormProps) {
+export function TaskForm({ assignedTo, template, initialTitle, initialDescription }: TaskFormProps) {
   const navigate = useNavigate();
   const { createTask, isLoading, error, clearError } = useTaskStore();
 
   const [formData, setFormData] = useState({
-    title: template?.name || '',
-    description: template?.description || '',
+    title: initialTitle || template?.name || '',
+    description: initialDescription || template?.description || '',
     category: template?.category || 'homework',
     suggested_duration: template?.suggested_duration?.toString() || '',
     scheduled_date: new Date().toISOString().split('T')[0],
@@ -45,6 +47,19 @@ export function TaskForm({ assignedTo, template }: TaskFormProps) {
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [selectedTagIds, setSelectedTagIds] = useState<number[]>([]);
+
+  // Update form when OCR text changes
+  useEffect(() => {
+    if (initialTitle) {
+      setFormData(prev => ({ ...prev, title: initialTitle }));
+    }
+  }, [initialTitle]);
+
+  useEffect(() => {
+    if (initialDescription) {
+      setFormData(prev => ({ ...prev, description: initialDescription }));
+    }
+  }, [initialDescription]);
 
   const validate = () => {
     const errors: Record<string, string> = {};
