@@ -17,6 +17,7 @@ import { TemplatesPage } from '../pages/TemplatesPage';
 import { TemplateFormPage } from '../pages/TemplateFormPage';
 import { CalendarPage } from '../pages/CalendarPage';
 import { BadgesPage } from '../pages/BadgesPage';
+import { NotificationSettingsPage } from '../pages/NotificationSettingsPage';
 import { AppLayout } from '../components/layout/AppLayout';
 
 export const router = createBrowserRouter([
@@ -123,6 +124,10 @@ export const router = createBrowserRouter([
       {
         path: 'badges',
         element: <BadgesPage />,
+      },
+      {
+        path: 'notifications/settings',
+        element: <NotificationSettingsPage />,
       },
     ],
   },

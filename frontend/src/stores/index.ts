@@ -4,4 +4,5 @@ export { useChildrenStore } from './childrenStore';
 export { useRewardStore } from './rewardStore';
 export { useTimeStore } from './timeStore';
 export { useNotificationStore } from './notificationStore';
+export { useNotificationSettingsStore } from './notificationSettingsStore';
 export { useThemeStore } from './themeStore';
