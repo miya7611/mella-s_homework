@@ -53,6 +53,11 @@ export function TaskCreatePage() {
     }
   };
 
+  const handleOCRClear = () => {
+    setOcrTitle('');
+    setOcrDescription('');
+  };
+
   if (!user) {
     return null;
   }
@@ -100,7 +105,7 @@ export function TaskCreatePage() {
 
         {showOCR && (
           <div className="mt-3">
-            <OCRUploader onOCRResult={handleOCRResult} />
+            <OCRUploader onOCRResult={handleOCRResult} onClear={handleOCRClear} />
           </div>
         )}
       </div>

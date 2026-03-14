@@ -1,19 +1,27 @@
 import { useState, useRef } from 'react';
-import { Upload, Camera, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
+import { Upload, Camera, Loader2, AlertCircle, CheckCircle, RotateCcw } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Card, CardContent } from '../ui/Card';
 import { ocrService, type ParsedHomework } from '../../services/ocrService';
 
 interface OCRUploaderProps {
   onOCRResult: (result: ParsedHomework) => void;
+  onClear?: () => void;
 }
 
-export function OCRUploader({ onOCRResult }: OCRUploaderProps) {
+export function OCRUploader({ onOCRResult, onClear }: OCRUploaderProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [lastResult, setLastResult] = useState<ParsedHomework | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleReset = () => {
+    setLastResult(null);
+    setError(null);
+    setProgress(0);
+    onClear?.();
+  };
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -140,14 +148,25 @@ export function OCRUploader({ onOCRResult }: OCRUploaderProps) {
       {lastResult && !isProcessing && (
         <Card>
           <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <CheckCircle className="h-5 w-5 text-green-500" />
-              <span className="font-medium">识别完成</span>
-              {lastResult.subject && (
-                <span className="text-sm text-muted-foreground ml-2">
-                  科目: {lastResult.subject}
-                </span>
-              )}
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5 text-green-500" />
+                <span className="font-medium">识别完成</span>
+                {lastResult.subject && (
+                  <span className="text-sm text-muted-foreground ml-2">
+                    科目: {lastResult.subject}
+                  </span>
+                )}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleReset}
+                className="flex items-center gap-1"
+              >
+                <RotateCcw className="h-4 w-4" />
+                重新识别
+              </Button>
             </div>
 
             {lastResult.tasks.length > 0 && (
